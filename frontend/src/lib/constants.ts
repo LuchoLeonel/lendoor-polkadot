@@ -1,0 +1,1 @@
+export const backendUri = import.meta.env.VITE_PUBLIC_BACKEND_URL ?? "http://localhost:5001";
