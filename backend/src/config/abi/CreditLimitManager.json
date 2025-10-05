@@ -1,0 +1,442 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        { "name": "_owner", "type": "address", "internalType": "address" }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "batchSetLines",
+      "inputs": [
+        {
+          "name": "ups",
+          "type": "tuple[]",
+          "internalType": "struct CreditLimitManager.LineUpdate[]",
+          "components": [
+            { "name": "account", "type": "address", "internalType": "address" },
+            { "name": "score", "type": "uint8", "internalType": "uint8" },
+            { "name": "limit", "type": "uint256", "internalType": "uint256" }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "clearLine",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "creditLimit",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "lines",
+      "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "outputs": [
+        { "name": "score", "type": "uint8", "internalType": "uint8" },
+        { "name": "limit", "type": "uint248", "internalType": "uint248" }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "scoreOf",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint8", "internalType": "uint8" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setLine",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" },
+        { "name": "score", "type": "uint8", "internalType": "uint8" },
+        { "name": "limit", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setOwner",
+      "inputs": [{ "name": "n", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "LineCleared",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "LineSet",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "score",
+          "type": "uint8",
+          "indexed": false,
+          "internalType": "uint8"
+        },
+        {
+          "name": "limit",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "OwnerChanged",
+      "inputs": [
+        {
+          "name": "oldOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "newOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    }
+  ],
+  "bytecode": {
+    "object": "0x608060405234801561000f575f80fd5b5060405161098b38038061098b83398101604081905261002e9161006a565b6001600160a01b038116156100435780610045565b335b5f80546001600160a01b0319166001600160a01b039290921691909117905550610097565b5f6020828403121561007a575f80fd5b81516001600160a01b0381168114610090575f80fd5b9392505050565b6108e7806100a45f395ff3fe608060405234801561000f575f80fd5b5060043610610085575f3560e01c806393a2ab181161005857806393a2ab181461019a578063960c3a60146101ad578063b5b98ce914610230578063ebfedd3114610243575f80fd5b8063133af4561461008957806313af4035146100d85780631f429f50146100ed5780638da5cb5b14610156575b5f80fd5b6100c1610097366004610793565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205460ff1690565b60405160ff90911681526020015b60405180910390f35b6100eb6100e6366004610793565b610256565b005b6101486100fb366004610793565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205461010090047effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1690565b6040519081526020016100cf565b5f546101759073ffffffffffffffffffffffffffffffffffffffff1681565b60405173ffffffffffffffffffffffffffffffffffffffff90911681526020016100cf565b6100eb6101a8366004610793565b6103e3565b6101f76101bb366004610793565b60016020525f908152604090205460ff81169061010090047effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1682565b6040805160ff90931683527effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9091166020830152016100cf565b6100eb61023e3660046107b3565b6104b3565b6100eb610251366004610832565b6105c0565b5f5473ffffffffffffffffffffffffffffffffffffffff1633146102db576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064015b60405180910390fd5b73ffffffffffffffffffffffffffffffffffffffff8116610358576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600760248201527f6f776e65723d300000000000000000000000000000000000000000000000000060448201526064016102d2565b5f805460405173ffffffffffffffffffffffffffffffffffffffff808516939216917fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c91a35f80547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff92909216919091179055565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610463576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b73ffffffffffffffffffffffffffffffffffffffff81165f81815260016020526040808220829055517f168ef39dff4c656ad71e0a283758feed9190b79916ca2936f34ac33d22dccbfc9190a250565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610533576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b5f5b818110156105bb576105b38383838181106105525761055261086b565b6105689260206060909202019081019150610793565b84848481811061057a5761057a61086b565b90506060020160200160208101906105929190610898565b8585858181106105a4576105a461086b565b905060600201604001356105c0565b600101610535565b505050565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610640576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b73ffffffffffffffffffffffffffffffffffffffff83166106bd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600660248201527f616363743d30000000000000000000000000000000000000000000000000000060448201526064016102d2565b60408051808201825260ff8481168083527effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff858116602080860191825273ffffffffffffffffffffffffffffffffffffffff8a165f8181526001835288902096519251909316610100029190941617909355835190815290810184905290917f6a9730eda0cebbb436d11754e768a91191e887ffc9d84ab8770e77355a41f0c5910160405180910390a2505050565b803573ffffffffffffffffffffffffffffffffffffffff8116811461078e575f80fd5b919050565b5f602082840312156107a3575f80fd5b6107ac8261076b565b9392505050565b5f80602083850312156107c4575f80fd5b823567ffffffffffffffff808211156107db575f80fd5b818501915085601f8301126107ee575f80fd5b8135818111156107fc575f80fd5b866020606083028501011115610810575f80fd5b60209290920196919550909350505050565b803560ff8116811461078e575f80fd5b5f805f60608486031215610844575f80fd5b61084d8461076b565b925061085b60208501610822565b9150604084013590509250925092565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f602082840312156108a8575f80fd5b6107ac8261082256fea26469706673582212203391c0de169c55dad852158752fe629632820816312a61443dcc75ababa1efe364736f6c63430008180033",
+    "sourceMap": "361:2011:20:-:0;;;883:95;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;-1:-1:-1;;;;;929:20:20;;;:42;;965:6;929:42;;;952:10;929:42;921:5;:50;;-1:-1:-1;;;;;;921:50:20;-1:-1:-1;;;;;921:50:20;;;;;;;;;;-1:-1:-1;361:2011:20;;14:290:21;84:6;137:2;125:9;116:7;112:23;108:32;105:52;;;153:1;150;143:12;105:52;179:16;;-1:-1:-1;;;;;224:31:21;;214:42;;204:70;;270:1;267;260:12;204:70;293:5;14:290;-1:-1:-1;;;14:290:21:o;:::-;361:2011:20;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x608060405234801561000f575f80fd5b5060043610610085575f3560e01c806393a2ab181161005857806393a2ab181461019a578063960c3a60146101ad578063b5b98ce914610230578063ebfedd3114610243575f80fd5b8063133af4561461008957806313af4035146100d85780631f429f50146100ed5780638da5cb5b14610156575b5f80fd5b6100c1610097366004610793565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205460ff1690565b60405160ff90911681526020015b60405180910390f35b6100eb6100e6366004610793565b610256565b005b6101486100fb366004610793565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205461010090047effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1690565b6040519081526020016100cf565b5f546101759073ffffffffffffffffffffffffffffffffffffffff1681565b60405173ffffffffffffffffffffffffffffffffffffffff90911681526020016100cf565b6100eb6101a8366004610793565b6103e3565b6101f76101bb366004610793565b60016020525f908152604090205460ff81169061010090047effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1682565b6040805160ff90931683527effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9091166020830152016100cf565b6100eb61023e3660046107b3565b6104b3565b6100eb610251366004610832565b6105c0565b5f5473ffffffffffffffffffffffffffffffffffffffff1633146102db576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064015b60405180910390fd5b73ffffffffffffffffffffffffffffffffffffffff8116610358576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600760248201527f6f776e65723d300000000000000000000000000000000000000000000000000060448201526064016102d2565b5f805460405173ffffffffffffffffffffffffffffffffffffffff808516939216917fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c91a35f80547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff92909216919091179055565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610463576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b73ffffffffffffffffffffffffffffffffffffffff81165f81815260016020526040808220829055517f168ef39dff4c656ad71e0a283758feed9190b79916ca2936f34ac33d22dccbfc9190a250565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610533576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b5f5b818110156105bb576105b38383838181106105525761055261086b565b6105689260206060909202019081019150610793565b84848481811061057a5761057a61086b565b90506060020160200160208101906105929190610898565b8585858181106105a4576105a461086b565b905060600201604001356105c0565b600101610535565b505050565b5f5473ffffffffffffffffffffffffffffffffffffffff163314610640576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f6e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016102d2565b73ffffffffffffffffffffffffffffffffffffffff83166106bd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600660248201527f616363743d30000000000000000000000000000000000000000000000000000060448201526064016102d2565b60408051808201825260ff8481168083527effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff858116602080860191825273ffffffffffffffffffffffffffffffffffffffff8a165f8181526001835288902096519251909316610100029190941617909355835190815290810184905290917f6a9730eda0cebbb436d11754e768a91191e887ffc9d84ab8770e77355a41f0c5910160405180910390a2505050565b803573ffffffffffffffffffffffffffffffffffffffff8116811461078e575f80fd5b919050565b5f602082840312156107a3575f80fd5b6107ac8261076b565b9392505050565b5f80602083850312156107c4575f80fd5b823567ffffffffffffffff808211156107db575f80fd5b818501915085601f8301126107ee575f80fd5b8135818111156107fc575f80fd5b866020606083028501011115610810575f80fd5b60209290920196919550909350505050565b803560ff8116811461078e575f80fd5b5f805f60608486031215610844575f80fd5b61084d8461076b565b925061085b60208501610822565b9150604084013590509250925092565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f602082840312156108a8575f80fd5b6107ac8261082256fea26469706673582212203391c0de169c55dad852158752fe629632820816312a61443dcc75ababa1efe364736f6c63430008180033",
+    "sourceMap": "361:2011:20:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;2262:108;;;;;;:::i;:::-;2343:14;;2319:5;2343:14;;;:5;:14;;;;;:20;;;;2262:108;;;;578:4:21;566:17;;;548:36;;536:2;521:18;2262:108:20;;;;;;;;984:156;;;;;;:::i;:::-;;:::i;:::-;;2085:123;;;;;;:::i;:::-;2180:14;;2146:7;2180:14;;;:5;:14;;;;;:20;;;;;;;2085:123;;;;741:25:21;;;729:2;714:18;2085:123:20;595:177:21;403:20:20;;;;;;;;;;;;953:42:21;941:55;;;923:74;;911:2;896:18;403:20:20;777:226:21;1926:128:20;;;;;;:::i;:::-;;:::i;566:37::-;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;1208:4:21;1196:17;;;1178:36;;1262:64;1250:77;;;1245:2;1230:18;;1223:105;1151:18;566:37:20;1008:326:21;1646:198:20;;;;;;:::i;:::-;;:::i;1264:251::-;;;;;;:::i;:::-;;:::i;984:156::-;852:5;;;;838:10;:19;830:41;;;;;;;2685:2:21;830:41:20;;;2667:21:21;2724:1;2704:18;;;2697:29;2762:11;2742:18;;;2735:39;2791:18;;830:41:20;;;;;;;;;1050:15:::1;::::0;::::1;1042:35;;;::::0;::::1;::::0;;3022:2:21;1042:35:20::1;::::0;::::1;3004:21:21::0;3061:1;3041:18;;;3034:29;3099:9;3079:18;;;3072:37;3126:18;;1042:35:20::1;2820:330:21::0;1042:35:20::1;1105:5;::::0;;1092:22:::1;::::0;::::1;::::0;;::::1;::::0;1105:5;::::1;::::0;1092:22:::1;::::0;::::1;1124:5;:9:::0;;;::::1;;::::0;;;::::1;::::0;;;::::1;::::0;;984:156::o;1926:128::-;852:5;;;;838:10;:19;830:41;;;;;;;2685:2:21;830:41:20;;;2667:21:21;2724:1;2704:18;;;2697:29;2762:11;2742:18;;;2735:39;2791:18;;830:41:20;2483:332:21;830:41:20;1998:14:::1;::::0;::::1;;::::0;;;:5:::1;:14;::::0;;;;;1991:21;;;2027:20;::::1;::::0;1998:14;2027:20:::1;1926:128:::0;:::o;1646:198::-;852:5;;;;838:10;:19;830:41;;;;;;;2685:2:21;830:41:20;;;2667:21:21;2724:1;2704:18;;;2697:29;2762:11;2742:18;;;2735:39;2791:18;;830:41:20;2483:332:21;830:41:20;1730:9:::1;1725:113;1741:14:::0;;::::1;1725:113;;;1776:51;1784:3;;1788:1;1784:6;;;;;;;:::i;:::-;:14;::::0;::::1;:6;::::0;;::::1;;:14:::0;;::::1;::::0;-1:-1:-1;1784:14:20::1;:::i;:::-;1800:3;;1804:1;1800:6;;;;;;;:::i;:::-;;;;;;:12;;;;;;;;;;:::i;:::-;1814:3;;1818:1;1814:6;;;;;;;:::i;:::-;;;;;;:12;;;1776:7;:51::i;:::-;1757:3;;1725:113;;;;1646:198:::0;;:::o;1264:251::-;852:5;;;;838:10;:19;830:41;;;;;;;2685:2:21;830:41:20;;;2667:21:21;2724:1;2704:18;;;2697:29;2762:11;2742:18;;;2735:39;2791:18;;830:41:20;2483:332:21;830:41:20;1361:21:::1;::::0;::::1;1353:40;;;::::0;::::1;::::0;;3733:2:21;1353:40:20::1;::::0;::::1;3715:21:21::0;3772:1;3752:18;;;3745:29;3810:8;3790:18;;;3783:36;3836:18;;1353:40:20::1;3531:329:21::0;1353:40:20::1;1420:43;::::0;;;;::::1;::::0;;::::1;::::0;;::::1;::::0;;;::::1;::::0;;::::1;;::::0;;::::1;::::0;;;1403:14:::1;::::0;::::1;-1:-1:-1::0;1403:14:20;;;:5:::1;:14:::0;;;;;:60;;;;;;::::1;;;::::0;;;::::1;;::::0;;;1478:30;;4035:36:21;;;4087:18;;;4080:34;;;1403:14:20;;1478:30:::1;::::0;4008:18:21;1478:30:20::1;;;;;;;1264:251:::0;;;:::o;14:196:21:-;82:20;;142:42;131:54;;121:65;;111:93;;200:1;197;190:12;111:93;14:196;;;:::o;215:186::-;274:6;327:2;315:9;306:7;302:23;298:32;295:52;;;343:1;340;333:12;295:52;366:29;385:9;366:29;:::i;:::-;356:39;215:186;-1:-1:-1;;;215:186:21:o;1339:649::-;1456:6;1464;1517:2;1505:9;1496:7;1492:23;1488:32;1485:52;;;1533:1;1530;1523:12;1485:52;1573:9;1560:23;1602:18;1643:2;1635:6;1632:14;1629:34;;;1659:1;1656;1649:12;1629:34;1697:6;1686:9;1682:22;1672:32;;1742:7;1735:4;1731:2;1727:13;1723:27;1713:55;;1764:1;1761;1754:12;1713:55;1804:2;1791:16;1830:2;1822:6;1819:14;1816:34;;;1846:1;1843;1836:12;1816:34;1902:7;1897:2;1889:4;1881:6;1877:17;1873:2;1869:26;1865:35;1862:48;1859:68;;;1923:1;1920;1913:12;1859:68;1954:2;1946:11;;;;;1976:6;;-1:-1:-1;1339:649:21;;-1:-1:-1;;;;1339:649:21:o;1993:156::-;2059:20;;2119:4;2108:16;;2098:27;;2088:55;;2139:1;2136;2129:12;2154:324;2229:6;2237;2245;2298:2;2286:9;2277:7;2273:23;2269:32;2266:52;;;2314:1;2311;2304:12;2266:52;2337:29;2356:9;2337:29;:::i;:::-;2327:39;;2385:36;2417:2;2406:9;2402:18;2385:36;:::i;:::-;2375:46;;2468:2;2457:9;2453:18;2440:32;2430:42;;2154:324;;;;;:::o;3155:184::-;3207:77;3204:1;3197:88;3304:4;3301:1;3294:15;3328:4;3325:1;3318:15;3344:182;3401:6;3454:2;3442:9;3433:7;3429:23;3425:32;3422:52;;;3470:1;3467;3460:12;3422:52;3493:27;3510:9;3493:27;:::i",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "batchSetLines((address,uint8,uint256)[])": "b5b98ce9",
+    "clearLine(address)": "93a2ab18",
+    "creditLimit(address)": "1f429f50",
+    "lines(address)": "960c3a60",
+    "owner()": "8da5cb5b",
+    "scoreOf(address)": "133af456",
+    "setLine(address,uint8,uint256)": "ebfedd31",
+    "setOwner(address)": "13af4035"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.24+commit.e11b9ed9\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"LineCleared\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"score\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"LineSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnerChanged\",\"type\":\"event\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"score\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"internalType\":\"struct CreditLimitManager.LineUpdate[]\",\"name\":\"ups\",\"type\":\"tuple[]\"}],\"name\":\"batchSetLines\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"clearLine\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"creditLimit\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"lines\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"score\",\"type\":\"uint8\"},{\"internalType\":\"uint248\",\"name\":\"limit\",\"type\":\"uint248\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"scoreOf\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"score\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"setLine\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"n\",\"type\":\"address\"}],\"name\":\"setOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"setLine(address,uint8,uint256)\":{\"params\":{\"limit\":\"In units of the asset (e.g. USDC: 6 decimals)\"}}},\"title\":\"CreditLimitManager (per-user)\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"clearLine(address)\":{\"notice\":\"Deletes the user's score/limit (equivalent to a limit of 0)\"},\"scoreOf(address)\":{\"notice\":\"Helper to read the user's score\"},\"setLine(address,uint8,uint256)\":{\"notice\":\"Sets score and limit for `account`\"}},\"notice\":\"Registers score (0..255) and limit per user, in units of the asset (e.g. USDC 6 dec)\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/CreditLimitManager.sol\":\"CreditLimitManager\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":20000},\"remappings\":[\":@ensdomains/=lib/euler-swap/lib/v4-periphery/lib/v4-core/node_modules/@ensdomains/\",\":@layerzerolabs/lz-evm-messagelib-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/messagelib/\",\":@layerzerolabs/lz-evm-oapp-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/oapp/\",\":@layerzerolabs/lz-evm-protocol-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/protocol/\",\":@layerzerolabs/oapp-evm-upgradeable/=lib/layerzero-devtools/packages/oapp-evm-upgradeable/\",\":@layerzerolabs/oapp-evm/=lib/layerzero-devtools/packages/oapp-evm/\",\":@layerzerolabs/oft-evm/=lib/layerzero-devtools/packages/oft-evm/\",\":@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/\",\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":@pendle/core-v2/=lib/euler-price-oracle/lib/pendle-core-v2-public/contracts/\",\":@pyth/=lib/euler-price-oracle/lib/pyth-sdk-solidity/\",\":@redstone/evm-connector/=lib/euler-price-oracle/lib/redstone-oracles-monorepo/packages/evm-connector/contracts/\",\":@solady/=lib/euler-price-oracle/lib/solady/src/\",\":@uniswap/v3-core/=lib/euler-price-oracle/lib/v3-core/\",\":@uniswap/v3-periphery/=lib/euler-price-oracle/lib/v3-periphery/\",\":@uniswap/v4-core/=lib/euler-swap/lib/v4-periphery/lib/v4-core/\",\":ds-test/=lib/fee-flow/lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts-upgradeable/lib/erc4626-tests/\",\":ethereum-vault-connector/=lib/ethereum-vault-connector/src/\",\":euler-earn/=lib/euler-earn/src/\",\":euler-price-oracle-test/=lib/euler-price-oracle/test/\",\":euler-price-oracle/=lib/euler-price-oracle/src/\",\":euler-swap/=lib/euler-swap/\",\":euler-vault-kit/=lib/euler-vault-kit/\",\":evc/=lib/ethereum-vault-connector/src/\",\":evk-test/=lib/euler-vault-kit/test/\",\":evk/=lib/euler-vault-kit/src/\",\":fee-flow/=lib/fee-flow/src/\",\":forge-gas-snapshot/=lib/euler-vault-kit/lib/permit2/lib/forge-gas-snapshot/src/\",\":forge-std/=lib/forge-std/src/\",\":halmos-cheatcodes/=lib/openzeppelin-contracts-upgradeable/lib/halmos-cheatcodes/src/\",\":hardhat/=lib/euler-swap/lib/v4-periphery/lib/v4-core/node_modules/hardhat/\",\":layerzero-devtools/=lib/layerzero-devtools/packages/toolbox-foundry/src/\",\":layerzero-v2/=lib/layerzero-v2/\",\":layerzero/oft-evm-upgradeable/=lib/layerzero-devtools/packages/oft-evm-upgradeable/contracts/\",\":layerzero/oft-evm/=lib/layerzero-devtools/packages/oft-evm/contracts/\",\":openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/\",\":openzeppelin/=lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/\",\":pendle-core-v2-public/=lib/euler-price-oracle/lib/pendle-core-v2-public/contracts/\",\":permit2/=lib/euler-vault-kit/lib/permit2/\",\":pyth-sdk-solidity/=lib/euler-price-oracle/lib/pyth-sdk-solidity/\",\":redstone-oracles-monorepo/=lib/euler-price-oracle/lib/\",\":reward-streams/=lib/reward-streams/src/\",\":solady/=lib/euler-price-oracle/lib/solady/src/\",\":solidity-bytes-utils/=lib/solidity-bytes-utils/\",\":solmate/=lib/fee-flow/lib/solmate/src/\",\":v3-core/=lib/euler-price-oracle/lib/v3-core/contracts/\",\":v3-periphery/=lib/euler-price-oracle/lib/v3-periphery/contracts/\",\":v4-core/=lib/euler-swap/lib/v4-periphery/lib/v4-core/src/\",\":v4-periphery/=lib/euler-swap/lib/v4-periphery/\",\"lib/euler-earn:@openzeppelin-upgradeable/=lib/euler-earn/lib/openzeppelin-contracts-upgradeable/contracts/\",\"lib/euler-earn:@openzeppelin/=lib/euler-earn/lib/openzeppelin-contracts/\",\"lib/euler-earn:ethereum-vault-connector/=lib/euler-earn/lib/ethereum-vault-connector/src/\",\"lib/euler-price-oracle:@openzeppelin/contracts/=lib/euler-price-oracle/lib/openzeppelin-contracts/contracts/\",\"lib/euler-swap:solmate/=lib/euler-swap/lib/euler-vault-kit/lib/permit2/lib/solmate/\",\"lib/fee-flow/src:solmate/=lib/fee-flow/lib/solmate/src/\",\"lib/fee-flow/tokens:solmate/=lib/fee-flow/lib/solmate/tokens/\",\"lib/fee-flow/utils:solmate/=lib/fee-flow/lib/solmate/utils/\",\"lib/layerzero-devtools/packages/oapp-evm-upgradeable/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/\",\"lib/layerzero-devtools/packages/oft-evm-upgradeable/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/\",\"lib/layerzero-devtools/packages/oft-evm/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts/contracts/\"]},\"sources\":{\"src/CreditLimitManager.sol\":{\"keccak256\":\"0xc2017e9eb9973da8c73a8ca5d5a321c78b6ad6d231457a1da97df070eb56b631\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1fd33e43c46ba17c16b57fbb1220e9c1953ffb232b0ee47cb2f65d1ccaef2ce7\",\"dweb:/ipfs/QmYp6YxahPrPDSBpSaj9ffEQmTbBtAsoyGmZATyHpXUTDM\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": { "version": "0.8.24+commit.e11b9ed9" },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            { "internalType": "address", "name": "_owner", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "LineCleared",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "uint8",
+              "name": "score",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "internalType": "uint256",
+              "name": "limit",
+              "type": "uint256",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "LineSet",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "oldOwner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "OwnerChanged",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "struct CreditLimitManager.LineUpdate[]",
+              "name": "ups",
+              "type": "tuple[]",
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "account",
+                  "type": "address"
+                },
+                { "internalType": "uint8", "name": "score", "type": "uint8" },
+                {
+                  "internalType": "uint256",
+                  "name": "limit",
+                  "type": "uint256"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "batchSetLines"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "clearLine"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "creditLimit",
+          "outputs": [
+            { "internalType": "uint256", "name": "", "type": "uint256" }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "", "type": "address" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "lines",
+          "outputs": [
+            { "internalType": "uint8", "name": "score", "type": "uint8" },
+            { "internalType": "uint248", "name": "limit", "type": "uint248" }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "owner",
+          "outputs": [
+            { "internalType": "address", "name": "", "type": "address" }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "scoreOf",
+          "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }]
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "account", "type": "address" },
+            { "internalType": "uint8", "name": "score", "type": "uint8" },
+            { "internalType": "uint256", "name": "limit", "type": "uint256" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setLine"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "n", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setOwner"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "setLine(address,uint8,uint256)": {
+            "params": {
+              "limit": "In units of the asset (e.g. USDC: 6 decimals)"
+            }
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {
+          "clearLine(address)": {
+            "notice": "Deletes the user's score/limit (equivalent to a limit of 0)"
+          },
+          "scoreOf(address)": { "notice": "Helper to read the user's score" },
+          "setLine(address,uint8,uint256)": {
+            "notice": "Sets score and limit for `account`"
+          }
+        },
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=lib/euler-swap/lib/v4-periphery/lib/v4-core/node_modules/@ensdomains/",
+        "@layerzerolabs/lz-evm-messagelib-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/messagelib/",
+        "@layerzerolabs/lz-evm-oapp-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/oapp/",
+        "@layerzerolabs/lz-evm-protocol-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/protocol/",
+        "@layerzerolabs/oapp-evm-upgradeable/=lib/layerzero-devtools/packages/oapp-evm-upgradeable/",
+        "@layerzerolabs/oapp-evm/=lib/layerzero-devtools/packages/oapp-evm/",
+        "@layerzerolabs/oft-evm/=lib/layerzero-devtools/packages/oft-evm/",
+        "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+        "@pendle/core-v2/=lib/euler-price-oracle/lib/pendle-core-v2-public/contracts/",
+        "@pyth/=lib/euler-price-oracle/lib/pyth-sdk-solidity/",
+        "@redstone/evm-connector/=lib/euler-price-oracle/lib/redstone-oracles-monorepo/packages/evm-connector/contracts/",
+        "@solady/=lib/euler-price-oracle/lib/solady/src/",
+        "@uniswap/v3-core/=lib/euler-price-oracle/lib/v3-core/",
+        "@uniswap/v3-periphery/=lib/euler-price-oracle/lib/v3-periphery/",
+        "@uniswap/v4-core/=lib/euler-swap/lib/v4-periphery/lib/v4-core/",
+        "ds-test/=lib/fee-flow/lib/forge-std/lib/ds-test/src/",
+        "erc4626-tests/=lib/openzeppelin-contracts-upgradeable/lib/erc4626-tests/",
+        "ethereum-vault-connector/=lib/ethereum-vault-connector/src/",
+        "euler-earn/=lib/euler-earn/src/",
+        "euler-price-oracle-test/=lib/euler-price-oracle/test/",
+        "euler-price-oracle/=lib/euler-price-oracle/src/",
+        "euler-swap/=lib/euler-swap/",
+        "euler-vault-kit/=lib/euler-vault-kit/",
+        "evc/=lib/ethereum-vault-connector/src/",
+        "evk-test/=lib/euler-vault-kit/test/",
+        "evk/=lib/euler-vault-kit/src/",
+        "fee-flow/=lib/fee-flow/src/",
+        "forge-gas-snapshot/=lib/euler-vault-kit/lib/permit2/lib/forge-gas-snapshot/src/",
+        "forge-std/=lib/forge-std/src/",
+        "halmos-cheatcodes/=lib/openzeppelin-contracts-upgradeable/lib/halmos-cheatcodes/src/",
+        "hardhat/=lib/euler-swap/lib/v4-periphery/lib/v4-core/node_modules/hardhat/",
+        "layerzero-devtools/=lib/layerzero-devtools/packages/toolbox-foundry/src/",
+        "layerzero-v2/=lib/layerzero-v2/",
+        "layerzero/oft-evm-upgradeable/=lib/layerzero-devtools/packages/oft-evm-upgradeable/contracts/",
+        "layerzero/oft-evm/=lib/layerzero-devtools/packages/oft-evm/contracts/",
+        "openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+        "openzeppelin/=lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/",
+        "pendle-core-v2-public/=lib/euler-price-oracle/lib/pendle-core-v2-public/contracts/",
+        "permit2/=lib/euler-vault-kit/lib/permit2/",
+        "pyth-sdk-solidity/=lib/euler-price-oracle/lib/pyth-sdk-solidity/",
+        "redstone-oracles-monorepo/=lib/euler-price-oracle/lib/",
+        "reward-streams/=lib/reward-streams/src/",
+        "solady/=lib/euler-price-oracle/lib/solady/src/",
+        "solidity-bytes-utils/=lib/solidity-bytes-utils/",
+        "solmate/=lib/fee-flow/lib/solmate/src/",
+        "v3-core/=lib/euler-price-oracle/lib/v3-core/contracts/",
+        "v3-periphery/=lib/euler-price-oracle/lib/v3-periphery/contracts/",
+        "v4-core/=lib/euler-swap/lib/v4-periphery/lib/v4-core/src/",
+        "v4-periphery/=lib/euler-swap/lib/v4-periphery/",
+        "lib/euler-earn:@openzeppelin-upgradeable/=lib/euler-earn/lib/openzeppelin-contracts-upgradeable/contracts/",
+        "lib/euler-earn:@openzeppelin/=lib/euler-earn/lib/openzeppelin-contracts/",
+        "lib/euler-earn:ethereum-vault-connector/=lib/euler-earn/lib/ethereum-vault-connector/src/",
+        "lib/euler-price-oracle:@openzeppelin/contracts/=lib/euler-price-oracle/lib/openzeppelin-contracts/contracts/",
+        "lib/euler-swap:solmate/=lib/euler-swap/lib/euler-vault-kit/lib/permit2/lib/solmate/",
+        "lib/fee-flow/src:solmate/=lib/fee-flow/lib/solmate/src/",
+        "lib/fee-flow/tokens:solmate/=lib/fee-flow/lib/solmate/tokens/",
+        "lib/fee-flow/utils:solmate/=lib/fee-flow/lib/solmate/utils/",
+        "lib/layerzero-devtools/packages/oapp-evm-upgradeable/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        "lib/layerzero-devtools/packages/oft-evm-upgradeable/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+        "lib/layerzero-devtools/packages/oft-evm/contracts:@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts/contracts/"
+      ],
+      "optimizer": { "enabled": true, "runs": 20000 },
+      "metadata": { "bytecodeHash": "ipfs" },
+      "compilationTarget": {
+        "src/CreditLimitManager.sol": "CreditLimitManager"
+      },
+      "evmVersion": "cancun",
+      "libraries": {}
+    },
+    "sources": {
+      "src/CreditLimitManager.sol": {
+        "keccak256": "0xc2017e9eb9973da8c73a8ca5d5a321c78b6ad6d231457a1da97df070eb56b631",
+        "urls": [
+          "bzz-raw://1fd33e43c46ba17c16b57fbb1220e9c1953ffb232b0ee47cb2f65d1ccaef2ce7",
+          "dweb:/ipfs/QmYp6YxahPrPDSBpSaj9ffEQmTbBtAsoyGmZATyHpXUTDM"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "id": 20
+}
