@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
+
 /// @title CreditLimitManager (per-user)
-/// @notice Registers score (0..255) and limit per user, in units of the asset (e.g. USDC 6 dec)
-contract CreditLimitManager is ICLM {
-    address public owner;
+/// @notice Registers score (0..255) and limit per user, in asset units (e.g., USDC 6 dec)
+contract CreditLimitManager is ICreditLimitManager {
+    address public owner; // cumple owner() de la interfaz por getter público
 
     struct Line {
         uint8   score;   // 0..255
-        uint248 limit;   // in units of the asset (e.g. 1000 USDC = 1000e6)
+        uint248 limit;   // asset units (e.g., 1000 USDC = 1000e6)
     }
 
     mapping(address => Line) public lines;
-
-    event OwnerChanged(address indexed oldOwner, address indexed newOwner);
-    event LineSet(address indexed account, uint8 score, uint256 limit);
-    event LineCleared(address indexed account);
 
     modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
 
@@ -23,41 +21,44 @@ contract CreditLimitManager is ICLM {
         owner = _owner == address(0) ? msg.sender : _owner;
     }
 
-    function setOwner(address n) external onlyOwner {
+    /// @inheritdoc ICreditLimitManager
+    function setOwner(address n) external override onlyOwner {
         require(n != address(0), "owner=0");
         emit OwnerChanged(owner, n);
         owner = n;
     }
 
-    /// @notice Sets score and limit for `account`
-    /// @param limit In units of the asset (e.g. USDC: 6 decimals)
-    function setLine(address account, uint8 score, uint256 limit) public onlyOwner {
+    /// @inheritdoc ICreditLimitManager
+    function setLine(address account, uint8 score, uint256 limit) public override onlyOwner {
         require(account != address(0), "acct=0");
         lines[account] = Line({score: score, limit: uint248(limit)});
         emit LineSet(account, score, limit);
     }
 
-    /// @notice Convenient batch (for multiple users)
-    struct LineUpdate { address account; uint8 score; uint256 limit; }
-    function batchSetLines(LineUpdate[] calldata ups) external onlyOwner {
+    /// @inheritdoc ICreditLimitManager
+    function batchSetLines(ICreditLimitManager.LineUpdate[] calldata ups)
+        external
+        override
+        onlyOwner
+    {
         for (uint256 i; i < ups.length; ++i) {
             setLine(ups[i].account, ups[i].score, ups[i].limit);
         }
     }
 
-    /// @notice Deletes the user's score/limit (equivalent to a limit of 0)
-    function clearLine(address account) external onlyOwner {
+    /// @inheritdoc ICreditLimitManager
+    function clearLine(address account) external override onlyOwner {
         delete lines[account];
         emit LineCleared(account);
     }
 
-    /// @inheritdoc ICLM
-    function creditLimit(address account) external view returns (uint256) {
+    /// @inheritdoc ICreditLimitManager
+    function creditLimit(address account) external view override returns (uint256) {
         return uint256(lines[account].limit);
     }
 
-    /// @notice Helper to read the user's score
-    function scoreOf(address account) external view returns (uint8) {
+    /// @inheritdoc ICreditLimitManager
+    function scoreOf(address account) external view override returns (uint8) {
         return lines[account].score;
     }
 }
