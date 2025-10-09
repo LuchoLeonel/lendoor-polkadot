@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @notice Interface that EVault expects
-interface IIRM {
-    error E_IRMUpdateUnauthorized();
+import {IIRM} from "../Interfaces/IIRM.sol";
 
-    function computeInterestRate(address vault, uint256 cash, uint256 borrows) external returns (uint256);
-    function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external view returns (uint256);
-}
+
 
 /// @title TestIRMFixedAPR.sol
 /// @notice Constant IRM: sets an APR and returns the rate per second in RAY (1e27)
-contract TestIRMFixedAPR is IIRM {
+contract IRM is IIRM {
     // SPY in RAY (1e27), e.g. ~3.170979198e17 for 1% APR
     uint256 public immutable ratePerSecondRay;
 
