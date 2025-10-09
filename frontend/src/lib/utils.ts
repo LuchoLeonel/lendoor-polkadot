@@ -34,26 +34,25 @@ export function formatUSDCAmount2dp(value: bigint | string): string {
 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 const baseImageUrl = isLocal ? 'http://localhost:3000' : 'https://lendoor.xyz';
 
-  export const evmNetworks = [
+export const evmNetworks = [
   {
-    blockExplorerUrls: ['https://etherscan.io'],
-    chainId: 1,
-    chainName: 'Ethereum Mainnet',
-    iconUrls: [`${baseImageUrl}/eth_logo.png`],
-    name: 'Ethereum',
+    blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io/'],
+    chainId: 420420422,
+    chainName: 'Polkadot Hub TestNet',
+    iconUrls: [`${baseImageUrl}/polkadot_logo.png`],
+    name: 'Polkadot Hub TestNet',
     nativeCurrency: {
       decimals: 18,
-      name: 'Ether',
-      symbol: 'ETH',
-      iconUrl: `${baseImageUrl}/eth_logo.png`,
+      name: 'Paseo',
+      symbol: 'PAS',
+      iconUrl: `${baseImageUrl}/polkadot_logo.png`,
     },
-    networkId: 1,
-    rpcUrls: [
-      'https://testnet-passet-hub-eth-rpc.polkadot.io',
-    ],
-    vanityName: 'Ethereum Mainnet',
+    networkId: 420420422,
+    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
+    vanityName: 'Polkadot Hub TestNet',
   },
 ];
+
 
 
 
