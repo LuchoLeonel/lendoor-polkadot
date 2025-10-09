@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/**
- * @title IMarket
- * @notice Interfaz del mercado de crédito (no es una vault). Administra deudas, interés y liquidez.
- */
+/// @title IMarket
+/// @notice Credit market (not a vault). Manages debt, interest and liquidity.
 interface IMarket {
     /* ===== LP (Senior) ===== */
     function supplyFromSenior(uint256 assets) external;
