@@ -15,7 +15,7 @@ COPY . .
 
 RUN yarn install
 
-ENV VITE_PUBLIC_BACKEND_URL=https://api.lendoor.xyz
+ENV VITE_PUBLIC_BACKEND_URL=https://api.polkadot.lendoor.xyz
 ENV VITE_PUBLIC_DYNAMIC_ENV_ID="7c0129ea-c276-419f-a158-a5ba44df52a3"
 
 ENV VITE_PUBLIC_VLAYER_API_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbnZpcm9ubWVudCI6InByb2R1Y3Rpb24iLCJpYXQiOjE3NTY2MDMxNDEsImV4cCI6MTc4ODIyNTU0MSwic3ViIjoiV0pSbzhPTzhnWU1lMFJ4T05saW02WU9Xa1hiMGlSeStqcDVhcERJZzVDQ3dRaVN1NG0raUgreFFMMG1lOUFJZkhMSWt1UWUxVnYvNkRUVTZGZjcweUE9PSJ9.F8fY_64SQ2UnP4Jm5apIhPHgU5XjAaCkksiT3I9qX68hbIq9JkuMN8SclRZFygOSBC3jiYEBTfPuErDK4EB5AecHxaxWhc4Z9SSybjBAlUXYQHRwpr3cRCkw5qALqYnCA-RmApqBK5jx27Ivo7OGB34Bxhd1fj9as1OP2Y10-yAoesnvLORh_okitk6YGsdWtIQXLP7_2s0M6Oor5-SAqvKFwqHjrckVOaCVhNqR16szzZL-86Irp8z8PezY3lV9FMcvxww9OHJU9bLSCjeSOYmjEZOBMyWus2QfGpchrAKG3jCdEKvADeC3C7BErPZaxIOflyMrdKdhc5M_xpAqoLTHcnTQkpY1lgXPapUMdTyfNkqnJDfxkOL0O4SngAysxDqmAFY1e7AlaC3tYg2JHOTGwmSNRaztmM7d5LYQ8iV-B1HesECyFAlNw-GyYCokReV0l2YKg1o9qTRgH0kf2PePsw1dRRyNy7FJus5yyYQ2wcUVVzPaikxTKvByOQ9LOi5iav9MxQY-wuR-j5mddAUFvrtqsOZ3slocn5-rNVgjq_x2jQtb0CsZVHakKtX1JLn6JhKtb_vjeOBcwt0bPP_TZmtqWQf-FULWD-vukJxAaG6CgRShLjVwnskYKAekLI5ewmgktwfj7ZTVBmritA3nhFdKFrfvwOiGpRvFu4Y"
@@ -49,6 +49,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/vite.config.ts ./
 
 
-EXPOSE 3000
+EXPOSE 3003
 
-CMD ["yarn", "preview", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["yarn", "preview", "--host", "0.0.0.0", "--port", "3003"]

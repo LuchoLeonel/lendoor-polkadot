@@ -20,6 +20,6 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  await app.listen(process.env.PORT ?? 5000);
+  await app.listen(process.env.PORT ?? 5003);
 }
 bootstrap();

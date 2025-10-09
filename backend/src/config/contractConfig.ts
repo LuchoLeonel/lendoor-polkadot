@@ -3,18 +3,18 @@ import dotenv from "dotenv";
 import * as CreditLimitManager from "./abi/CreditLimitManager.json";
 dotenv.config();
 
-const RPC_URL = process.env.RPC_URL;
+const RPC_URL = process.env.POLKADOT_RPC_URL;
 if (!RPC_URL) {
   throw new Error("Missing RPC URL in environment variables");
 }
 
 // Set contract address based on environment
-const CONTRACT_ADDRESS = process.env.VITE_EVAULT;
+const CONTRACT_ADDRESS = process.env.POLKADOT_EVAULT;
 if (!CONTRACT_ADDRESS) {
   throw new Error("Missing contract addresses in environment variables");
 }
 // Validate private key
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.POLKADOT_PRIVATE_KEY;
 if (!privateKey) {
   throw new Error("Missing PRIVATE_KEY in environment variables");
 }
