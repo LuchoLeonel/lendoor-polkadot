@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface ICreditLineManager {
-    function isAllowed(address borrower) external view returns (bool);
-    /// @notice Límite máximo de deuda en assets (no en shares).
-    function getCreditLimit(address borrower) external view returns (uint256);
-}
-
 /* ========================= Implementación mínima ========================= */
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin-contracts/utils/math/Math.sol";
+import {Ownable} from "@openzeppelin-contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin-contracts/utils/ReentrancyGuard.sol";
+import {IMarket} from "../Interfaces/IMarket.sol";
 
 /**
  * @title Market (mínimo indispensable)
