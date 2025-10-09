@@ -1,13 +1,38 @@
+'use client'
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { formatUnits } from 'ethers'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+export const DECIMALS = 4;
+
+export function formatUSDCAmount(value: bigint | string): string {
+  const asString = typeof value === 'bigint' ? formatUnits(value, DECIMALS) : value
+  const num = Number(asString)
+  if (!isFinite(num)) return asString
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 6,
+    minimumFractionDigits: 0,
+  }).format(num).replace(/(\.\d*?[1-9])0+$/u, '$1').replace(/\.0+$/u, '')
+}
+
+export function formatUSDCAmount2dp(value: bigint | string): string {
+  const asString = typeof value === 'bigint' ? formatUnits(value, DECIMALS) : value
+  const num = Number(asString)
+  if (!isFinite(num)) return asString
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  }).format(num)
+}
 
 
-  const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-  const baseImageUrl = isLocal ? 'http://localhost:3000' : 'https://lendoor.xyz';
+
+const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+const baseImageUrl = isLocal ? 'http://localhost:3000' : 'https://lendoor.xyz';
 
   export const evmNetworks = [
   {
@@ -24,8 +49,7 @@ export function cn(...inputs: ClassValue[]) {
     },
     networkId: 1,
     rpcUrls: [
-      'https://eth-mainnet.g.alchemy.com/v2/K_R03CbSUiXz-EaoiaeE4FuglxgxE_Nt',
-      'https://rpc.ankr.com/eth',
+      'https://testnet-passet-hub-eth-rpc.polkadot.io',
     ],
     vanityName: 'Ethereum Mainnet',
   },

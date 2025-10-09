@@ -1,16 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { InfoTip } from '@/components/common/InfoTooltip'
 import { PullPanel } from '@/components/borrow/PullPanel'
 import { RepayPanel } from '@/components/borrow/RepayPanel'
-import UserJourneyBadge from '../common/UserJourneyBadge'
-import { useUserJourney } from '../providers/UserProvider'
+import UserJourneyBadge from '@/components/common/UserJourneyBadge'
+import { useUserJourney } from '@/providers/UserJourneyProvider'
 
 type Tab = 'Pull' | 'Repay' | 'Stake with Symbiotic'
 
@@ -35,10 +31,9 @@ export function CreditMarket({setShowQR}: any) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex gap-1">
-              {(['Pull', 'Repay', 'Stake with Symbiotic'] as Tab[]).map((tab) => (
+              {(['Pull', 'Repay'] as Tab[]).map((tab) => (
                 <button
                   key={tab}
-                  disabled={tab==='Stake with Symbiotic'}
                   onClick={() => setActiveTab(tab)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     activeTab === tab

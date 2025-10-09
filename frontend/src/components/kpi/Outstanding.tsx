@@ -3,11 +3,8 @@
 import { InfoTip } from '@/components/common/InfoTooltip'
 
 type OutstandingKPIProps = {
-  /** Value text, e.g., "$0" */
   value: string
-  /** Extra classes for the container (e.g., change col-span) */
   containerClassName?: string
-  /** Extra classes for the value (e.g., color) */
   valueClassName?: string
 }
 

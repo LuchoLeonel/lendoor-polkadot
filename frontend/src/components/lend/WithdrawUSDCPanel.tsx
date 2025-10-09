@@ -3,88 +3,89 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { InfoTip } from '@/components/common/InfoTooltip'
 import { CenteredAmountInput } from '@/components/common/CenteredAmountInput'
-import { BackingTVVKPI } from '@/components/kpi/BackingTVV'
-import { SrApyKPI } from '@/components/kpi/SrAPY'
+import { AvailableToWithdrawKPI } from '@/components/kpi/AvailableToWithdraw'
+import { SusdcBalanceKPI } from '@/components/kpi/sUSDCBalance'
+import { USDCExchangeRateKPI } from '@/components/kpi/ExchangeRatesUSDC'
 import UserJourneyBadge from '@/components/common/UserJourneyBadge'
 import { useUserJourney } from '@/providers/UserJourneyProvider'
-import { SusdcBalanceKPI } from '@/components/kpi/sUSDCBalance'
-import { useApproveAndDepositUSDC } from '@/hooks/senior/useApproveAndDepositUSDC'
+import { useWithdrawUSDC } from '@/hooks/senior/useWithdrawUSDC'
+import { useUser } from '@/providers/UserProvider'
 
-
-
-type SupplyPanelProps = {
+type WithdrawPanelProps = {
   isLoggedIn: boolean
   loadingNetwork: boolean
   onConnect: () => void
-  onSupply: (amount: string) => void
-  supplyCapLabel?: string // ej: "SUPPLY CAP $10.000"
+  onWithdraw: (amount: string) => void
+  availableLabel?: string // ej: "AVAILABLE: $0"
 }
 
-export function SupplyPanelUSDC({
+export function WithdrawUSDCPanel({
   isLoggedIn,
   loadingNetwork,
   onConnect,
-  onSupply,
-  supplyCapLabel = 'SUPPLY CAP $10.000',
-}: SupplyPanelProps) {
+  onWithdraw,
+  availableLabel = 'AVAILABLE: $',
+}: WithdrawPanelProps) {
   const [amount, setAmount] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
-  const { ready, value } = useUserJourney()
-  const { submit, submitting } = useApproveAndDepositUSDC()
+  const { ready, value } = useUserJourney();
+  const { submit: submitWithdraw, submitting } = useWithdrawUSDC();
+  const { seniorWithdrawAvailableDisplay: seniorAvail } = useUser();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isLoggedIn) return onConnect()
-    if (!amount) return
-    const ok = await submit(amount)
+    const ok = await submitWithdraw(amount)
     if (ok) {
-      onSupply?.(amount)
+      onWithdraw?.(amount)
       setAmount('')
     }
   }
 
-  const cta = !isLoggedIn && !loadingNetwork ? 'Connect Wallet' : 'Supply Liquidity'
+
+  const cta = !isLoggedIn && !loadingNetwork ? 'Connect Wallet' : 'Withdraw Liquidity'
+  // Disable withdraw if amount empty, submitting, or pool not ready
   const isDisabled = !amount || submitting;
-  const showBadge = ready && (value === "deposit_usdc");
+  const showBadge = ready && value === "withdraw_usdc";
 
   return (
     <>
+      {/* KPIs (mismos que Supply; podés cambiarlos si necesitás) */}
       <div className="grid grid-cols-4 gap-2 w-full mx-auto">
-        <SrApyKPI />
-        <BackingTVVKPI value="10.4M" />
+        <USDCExchangeRateKPI />
+        <AvailableToWithdrawKPI value={`${seniorAvail}`} />
         <SusdcBalanceKPI />
       </div>
 
       <Card className="p-4 border-2 border-border/50">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs text-muted-foreground font-mono">EARN BY LENDING</span>
+          <span className="text-xs text-muted-foreground font-mono">MANAGE LIQUIDITY</span>
         </div>
 
         <form onSubmit={onSubmit} className="w-full">
           <CenteredAmountInput value={amount} onChange={setAmount} showBadge={showBadge && !amount} />
             <div className="mt-1 mb-4 text-xs text-muted-foreground text-center">
-            {supplyCapLabel}
+            {availableLabel}{seniorAvail}
             </div>
 
             {/* botón full width */}
             <Button
               type="submit"
               disabled={isDisabled}
-              className="mt-3 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 cursor-pointer text-base font-semibold"
+              className="mt-3 w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 cursor-pointer text-base font-semibold disabled:opacity-60"
             >
               {!!amount && showBadge && <UserJourneyBadge/>}
               {cta}
             </Button>
         </form>
 
-
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-xs text-muted-foreground">
-              TX Cost <InfoTip label="Estimated gas for supplying." variant="light" />
+              TX Cost <InfoTip label="Estimated gas for withdrawing." variant="light" />
             </span>
             <span className="text-xs">-</span>
           </div>
@@ -98,22 +99,17 @@ export function SupplyPanelUSDC({
           >
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-muted rounded flex items-center justify-center">
-                <span className="text-xs">💧</span>
+                <span className="text-xs">🏦</span>
               </div>
-              <span className="text-sm font-medium">Liquidity Info</span>
+              <span className="text-sm font-medium">Withdrawal Info</span>
             </div>
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           {isExpanded && (
             <div className="mt-3 space-y-3">
-              <div className="text-xs font-medium text-muted-foreground">ASSETS</div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs">USDC / sUSDC</span>
-                  <Info className="w-3 h-3 text-muted-foreground" />
-                </div>
-                <span className="text-xs">Pool-backed</span>
+              <div className="text-xs text-muted-foreground">
+                Real-time liquidity depends on market reserves; some tranches (ej. jUSDC) pueden tener cooldown.
               </div>
             </div>
           )}

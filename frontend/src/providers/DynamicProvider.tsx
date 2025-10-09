@@ -13,7 +13,6 @@ export function DynamicProvider({ children }: { children: React.ReactNode }) {
 
   if (!envId) {
     console.error('⛔ Missing VITE_PUBLIC_DYNAMIC_ENV_ID (o NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID).');
-    // Evitá crashear el árbol si falta la env
     return <>{children}</>;
   }
 

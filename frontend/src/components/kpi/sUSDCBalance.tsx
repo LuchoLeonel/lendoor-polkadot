@@ -2,30 +2,26 @@
 
 import * as React from 'react'
 import { InfoTip } from '@/components/common/InfoTooltip'
+import { useUser } from '@/providers/UserProvider'
 
-type SusdcBalanceKPIProps = {
-  /** Balance a mostrar, ej: "987.65 sUSDC" */
-  value: string
-  /** Label del KPI (por defecto "sUSDC Balance") */
+type Props = {
   label?: string
-  /** Símbolo/token a mostrar en el tooltip (por defecto "sUSDC") */
   tokenSymbol?: string
-  /** Tooltip custom (si no pasás, usa el default) */
   tooltipContent?: React.ReactNode
-  /** Clases extra para el contenedor (ej: col-span) */
   containerClassName?: string
-  /** Clases extra para el valor (color/tipografía) */
   valueClassName?: string
+  pollMs?: number
 }
 
 export function SusdcBalanceKPI({
-  value,
   label = 'sUSDC',
   tokenSymbol = 'sUSDC',
   tooltipContent,
   containerClassName = 'col-span-1',
   valueClassName = 'text-green-600',
-}: SusdcBalanceKPIProps) {
+}: Props) {
+  const { susdcDisplay } = useUser();
+
   const defaultTooltip = (
     <div>
       <div className="font-semibold">{tokenSymbol} Balance</div>
@@ -39,17 +35,13 @@ export function SusdcBalanceKPI({
   )
 
   return (
-    <div
-      className={`${containerClassName} h-14 px-3 py-1 rounded-lg border border-border/50 bg-card shadow-sm flex flex-col items-center justify-center`}
-    >
+    <div className={`${containerClassName} h-14 px-3 py-1 rounded-lg border border-border/50 bg-card shadow-sm flex flex-col items-center justify-center`}>
       <div className="flex items-center justify-center gap-1 mb-2">
         <span className="text-xs text-muted-foreground">{label}</span>
-        <InfoTip
-          contentClassName="font-display text-[11px] leading-snug"
-          label={tooltipContent ?? defaultTooltip}
-        />
+        <InfoTip contentClassName="font-display text-[11px] leading-snug" label={tooltipContent ?? defaultTooltip} />
       </div>
-      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{value}</div>
+      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{susdcDisplay}</div>
     </div>
   )
 }
+

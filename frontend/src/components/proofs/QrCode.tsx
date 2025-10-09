@@ -1,6 +1,5 @@
 'use client'
 
-import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { ZKPassport } from '@zkpassport/sdk'
 import QRCode from 'react-qr-code'
@@ -10,7 +9,7 @@ import { InfoTip } from '@/components/common/InfoTooltip'
 import { ArrowLeft, ShieldCheck, CheckCircle } from 'lucide-react'
 import { backendUri } from '@/lib/constants'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { useUserJourney } from '../providers/UserProvider'
+import { useUser } from '@/providers/UserProvider'
 
 type QRCodeViewProps = {
   onBack: () => void
@@ -39,11 +38,10 @@ export function QRCodeView({
   const [loading, setLoading] = useState<boolean>(true)
   const [submitting, setSubmitting] = useState(false)
   const [verified, setVerified] = useState<boolean | null>(null)
-  const [creditLimit, setCreditLimit] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const { primaryWallet, setShowAuthFlow } = useDynamicContext()
-  const { setIsVerified } = useUserJourney();
+  const { setIsVerified } = useUser();
 
   // ---- wallet actual siempre fresca (evita closures "stale") ----
   const walletRef = useRef<string>('')     // address en minúsculas
@@ -99,9 +97,6 @@ export function QRCodeView({
       if (!res.ok) throw new Error(await res.text().catch(() => `HTTP ${res.status}`))
       const data: BackendVerifyResponse = await res.json()
       setVerified(Boolean(data.verified))
-      const clRaw = data?.user?.creditLimit
-      const cl = typeof clRaw === 'number' ? clRaw : clRaw != null ? Number(clRaw as any) : null
-      setCreditLimit(Number.isFinite(cl as number) ? (cl as number) : null)
       setIsVerified(true);
     } catch (e: any) {
       setVerified(false)
@@ -125,8 +120,10 @@ export function QRCodeView({
     didInitRef.current = true
 
     setLoading(true)
-    setUrl(null); setRequestId(null); setError(null)
-    setVerified(null); setCreditLimit(null)
+    setUrl(null);
+    setRequestId(null);
+    setError(null);
+    setVerified(null);
     pendingProofRef.current = null
     sentRef.current = false
 

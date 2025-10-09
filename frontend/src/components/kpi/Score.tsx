@@ -1,28 +1,24 @@
 'use client'
 
-import { InfoTip } from '@/components/common/InfoTooltip'
 import * as React from 'react'
+import { InfoTip } from '@/components/common/InfoTooltip'
+import { useUser } from '@/providers/UserProvider'
 
 type CreditScoreKPIProps = {
-  /** Texto del valor, ej: "120/255" */
-  value: string
-  /** Label del KPI (por defecto "Score") */
   label?: string
-  /** Contenido custom del tooltip (si no pasás, usa el default) */
   tooltipContent?: React.ReactNode
-  /** Clases extra para el contenedor (ej: col-span) */
   containerClassName?: string
-  /** Clases extra para el valor (color/tipografía) */
   valueClassName?: string
 }
 
 export function CreditScoreKPI({
-  value,
   label = 'Score',
   tooltipContent,
   containerClassName = 'col-span-1',
   valueClassName = '',
 }: CreditScoreKPIProps) {
+  const { creditScoreDisplay } = useUser();
+
   const defaultTooltip = (
     <div>
       <div className="font-semibold">Credit Score</div>
@@ -46,7 +42,7 @@ export function CreditScoreKPI({
           label={tooltipContent ?? defaultTooltip}
         />
       </div>
-      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{value}</div>
+      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{creditScoreDisplay}</div>
     </div>
   )
 }

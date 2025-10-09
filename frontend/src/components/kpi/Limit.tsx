@@ -1,21 +1,20 @@
 'use client'
 
 import { InfoTip } from '@/components/common/InfoTooltip'
+import { useUser } from '@/providers/UserProvider'
 
 type BorrowLimitKPIProps = {
-  /** Texto del valor, ej: "0/1000 USDC" */
-  value: string
-  /** Clases extra para el contenedor (ej: cambiar col-span) */
   containerClassName?: string
-  /** Clases extra para el valor (ej: color) */
   valueClassName?: string
+  clmAddress?: `0x${string}`
 }
 
 export function BorrowLimitKPI({
-  value,
   containerClassName = 'col-span-2',
   valueClassName = 'text-green-600',
 }: BorrowLimitKPIProps) {
+  const { creditLimitDisplay } = useUser();
+
   return (
     <div
       className={`${containerClassName} h-14 px-3 py-1 rounded-lg border border-border/50 bg-card shadow-sm flex flex-col items-center justify-center`}
@@ -28,20 +27,22 @@ export function BorrowLimitKPI({
             <div>
               <div className="font-semibold">Borrow Limit</div>
               <ul className="mt-2 list-none pl-0 space-y-2">
-                <li>Shows your current line and remaining capacity to pull.</li>
+                <li>Shows your current credit line and remaining capacity to draw.</li>
                 <li>
                   <span className="font-medium">Example:</span> 0 / 1000 USDC.
                 </li>
                 <li>
-                  <span className="font-medium">Available to pull</span> = limit − outstanding principal − pending pulls.
+                  <span className="font-medium">Available to draw</span> = limit − outstanding principal − pending draws.
                 </li>
-                <li>Limit can increase with score and verified backing (on/off-chain).</li>
+                <li>The limit can increase with a higher score and verified backing (on/off-chain).</li>
               </ul>
             </div>
           }
         />
       </div>
-      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{value}</div>
+      <div className={`text-sm font-bold leading-none ${valueClassName}`}>
+        {creditLimitDisplay}
+      </div>
     </div>
   )
 }

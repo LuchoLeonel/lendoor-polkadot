@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Info } from 'lucide-react'
-import { cn } from '@/lib/utils' // si no tenés cn, podés concatenar strings
+import { cn } from '@/lib/utils'
 
 type InfoTipProps = {
   label: React.ReactNode

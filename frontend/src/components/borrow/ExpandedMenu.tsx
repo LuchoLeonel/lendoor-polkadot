@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
-import { InfoTip } from "../common/InfoTooltip"
+import { useState } from 'react';
+import { InfoTip } from "@/components/common/InfoTooltip"
 import { useIsLoggedIn } from '@dynamic-labs/sdk-react-core'
-import { Button } from "../ui/button";
-import { useVLayer } from '@/components/providers/VLayerProvider';
+import { Button } from "@/components/ui/button";
+import { useVLayer } from '@/providers/VLayerProvider';
+import { useUser } from '@/providers/UserProvider'
 
-const ExpandedMenu = ({score}) => {
+const ExpandedMenu = () => {
   const isLoggedIn = useIsLoggedIn();
   const { isReady, userAddress, proveAverageBalance } = useVLayer();
+  const { creditScoreDisplay: score} = useUser();
 
   const [loading, setLoading] = useState(false);
   const [avgResult, setAvgResult] = useState<any>(null);

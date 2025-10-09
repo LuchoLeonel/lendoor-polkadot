@@ -4,15 +4,10 @@ import * as React from 'react'
 import { InfoTip } from '@/components/common/InfoTooltip'
 
 type AvailableToWithdrawKPIProps = {
-  /** Valor a mostrar, ej: "1,240 USDC" */
   value: string
-  /** Label del KPI (por defecto "Available to Withdraw") */
-  label?: string
-  /** Tooltip custom (si no pasás, usa el default) */
+  label?: String
   tooltipContent?: React.ReactNode
-  /** Clases extra para el contenedor (ej: col-span) */
   containerClassName?: string
-  /** Clases extra para el valor (color/tipografía) */
   valueClassName?: string
 }
 
