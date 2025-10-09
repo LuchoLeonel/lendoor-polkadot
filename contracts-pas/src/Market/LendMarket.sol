@@ -1,60 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/* ========================= Interfaces mínimas ========================= */
-
-interface IIRM {
-    /// @notice Devuelve la tasa por segundo en WAD (1e18) dada la utilización (WAD).
-    function ratePerSecond(uint256 utilizationWad) external view returns (uint256);
-}
-
 interface ICreditLineManager {
     function isAllowed(address borrower) external view returns (bool);
     /// @notice Límite máximo de deuda en assets (no en shares).
     function getCreditLimit(address borrower) external view returns (uint256);
-}
-
-/**
- * @title IMarket
- * @notice Interfaz del mercado de crédito (no es una vault). Administra deudas, interés y liquidez.
- */
-interface IMarket {
-    /* ===== LP (Senior) ===== */
-    function supplyFromSenior(uint256 assets) external;
-    function withdrawToSenior(uint256 assets) external;
-
-    /* ===== Borrowers ===== */
-    function borrow(uint256 assets, address receiver) external returns (uint256);
-    function repay(uint256 assets, address onBehalfOf) external returns (uint256);
-
-    /* ===== Accounting ===== */
-    function accrue() external;
-    function expectedBalances() external view returns (
-        uint256 totalSupplyAssets,
-        uint256 totalBorrowAssets,
-        uint256 liquidity
-    );
-    function positionOf(address borrower) external view returns (uint256 debtAssets);
-    function totalBorrows() external view returns (uint256);
-    function cash() external view returns (uint256);
-    function interestAccumulator() external view returns (uint256);
-    function interestRate() external view returns (uint256 ratePerSecondWad);
-
-    /* ===== Risk / Loss ===== */
-    function writeDown(address borrower, uint256 lossAssets) external;
-
-    /* ===== Admin ===== */
-    function setIRM(address newIRM) external;
-    function setCreditLineManager(address newCLM) external;
-    function setSeniorVault(address newSenior) external;
-
-    /* ===== Events ===== */
-    event Accrued(uint256 acc, uint64 lastAccrual, uint256 rateWad);
-    event SuppliedFromSenior(uint256 assets);
-    event WithdrawnToSenior(uint256 assets);
-    event Borrowed(address indexed borrower, address indexed receiver, uint256 assets);
-    event Repaid(address indexed payer, address indexed onBehalfOf, uint256 assets);
-    event WrittenDown(address indexed borrower, uint256 lossAssets);
 }
 
 /* ========================= Implementación mínima ========================= */
