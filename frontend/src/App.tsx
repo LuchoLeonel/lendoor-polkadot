@@ -1,9 +1,10 @@
-// src/App.jsx
+
 import { Routes, Route } from 'react-router-dom'
 import { Header } from '@/components/common/Header'
 import Home from '@/pages/Home'
 import BorrowPage from '@/pages/Borrow'
 import LendPage from '@/pages/Lend'
+import Test from '@/pages/Test'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/borrow" element={<BorrowPage />} />
             <Route path="/lend" element={<LendPage />} />
+            <Route path="/test" element={<Test />} />
           </Routes>
         </main>
       </div>
@@ -25,3 +27,4 @@ function App() {
 }
 
 export default App
+
