@@ -1,52 +1,60 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/* ========================= Implementación mínima ========================= */
-
+/* ========================= Imports ========================= */
 import {IERC20} from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin-contracts/utils/math/Math.sol";
 import {Ownable} from "@openzeppelin-contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin-contracts/utils/ReentrancyGuard.sol";
 import {IMarket} from "../Interfaces/IMarket.sol";
+import {IIRM} from "../Interfaces/IIRM.sol";
+import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
 
 /**
  * @title Market (mínimo indispensable)
  * @notice Mercado de crédito sin colateral con IRM y credit lines. El Senior (sUSDC) es el único LP.
- * - Deuda en formato escalado: principalScaled (base de acumulador = 1e18)
- * - interestAccumulator (WAD, 1e18 = sin interés). debt = principalScaled * acc / 1e18
- * - totalBorrows = totalPrincipalScaled * acc / 1e18
- * - cash: liquidez disponible (assets) en el mercado
+ * - Deuda escalada: principalScaled (base = WAD)
+ * - _acc (WAD) es el interest accumulator (1e18 = 1.0)
+ * - totalBorrows = totalPrincipalScaled * _acc / WAD
+ * - _cash: liquidez en assets mantenida en este contrato
  */
 contract Market is IMarket, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /* ===== Config ===== */
-    IERC20 public immutable asset;        // p.ej., USDC
-    address public seniorVault;           // sUSDC: único proveedor de liquidez
-    IIRM    public irm;
-    ICreditLineManager public clm;
+    IERC20 public immutable asset;          // p.ej., USDC
+    address public seniorVault;             // sUSDC: único LP
+    IIRM public irm;                        // IRM devuelve RAY en computeInterestRateView
+    ICreditLimitManager public clm;         // gestor de líneas de crédito
 
     /* ===== Interés (WAD) ===== */
-    uint256 public override interestAccumulator; // WAD, inicia en 1e18
-    uint64  public lastAccrual;                 // timestamp último accrue
+    uint256 private _acc;                   // interest accumulator en WAD
+    uint64  public lastAccrual;             // timestamp último accrue
 
     /* ===== Liquidez / Deuda ===== */
-    uint256 public override cash;               // assets libres en el contrato
-    uint256 public totalPrincipalScaled;        // suma de principalScaled de todos
+    uint256 private _cash;                  // liquidez disponible en assets
+    uint256 public totalPrincipalScaled;    // suma de principalScaled
 
     mapping(address => uint256) public principalScaledOf; // borrower => principalScaled
 
     /* ===== Constantes ===== */
     uint256 private constant WAD = 1e18;
+    uint256 private constant RAY = 1e27;
 
-    constructor(IERC20 _asset, address _seniorVault, address _irm, address _clm) {
+    constructor(
+        IERC20 _asset,
+        address _seniorVault,
+        address _irm,
+        address _clm,
+        address _owner
+    ) Ownable(_owner) {
         require(address(_asset) != address(0) && _seniorVault != address(0) && _irm != address(0) && _clm != address(0), "zero");
         asset = _asset;
         seniorVault = _seniorVault;
         irm = IIRM(_irm);
-        clm = ICreditLineManager(_clm);
-        interestAccumulator = WAD; // 1.0
+        clm = ICreditLimitManager(_clm);
+        _acc = WAD; // 1.0
         lastAccrual = uint64(block.timestamp);
     }
 
@@ -59,53 +67,50 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
 
     /* ===================== LP (Senior) ===================== */
 
-    /// @notice El Senior deposita liquidez en el mercado.
     function supplyFromSenior(uint256 assets) external override onlySenior nonReentrant {
         if (assets == 0) return;
         asset.safeTransferFrom(msg.sender, address(this), assets);
-        cash += assets;
+        _cash += assets;
         emit SuppliedFromSenior(assets);
     }
 
-    /// @notice El Senior retira liquidez del mercado.
     function withdrawToSenior(uint256 assets) external override onlySenior nonReentrant {
         if (assets == 0) return;
-        require(cash >= assets, "insufficient cash");
-        cash -= assets;
+        require(_cash >= assets, "insufficient cash");
+        _cash -= assets;
         asset.safeTransfer(msg.sender, assets);
         emit WithdrawnToSenior(assets);
     }
 
     /* ===================== Borrowers ===================== */
 
-    /// @notice Prestamo a borrower (solo credit-lines aprobado por CLM).
     function borrow(uint256 assets, address receiver) external override nonReentrant returns (uint256) {
         require(assets > 0, "zero");
-        _accrue(); // asegura tasas frescas
+        _accrue();
 
         address borrower = msg.sender;
-        require(clm.isAllowed(borrower), "not allowed");
 
-        // Headroom: deuda actual + nuevo monto <= crédito
+        // Autorización mínima: tener límite > 0 y no excederlo
+        uint256 limit = clm.creditLimit(borrower);
+        require(limit > 0, "not allowed");
+
         uint256 currentDebt = _debtAssetsOf(borrower);
-        uint256 limit = clm.getCreditLimit(borrower);
         require(currentDebt + assets <= limit, "limit");
 
-        require(cash >= assets, "no liquidity");
+        require(_cash >= assets, "no liquidity");
 
-        // principalScaled += assets / acc
-        uint256 deltaScaled = Math.mulDiv(assets, WAD, interestAccumulator, Math.Rounding.Ceil);
+        // principalScaled += assets / _acc
+        uint256 deltaScaled = Math.mulDiv(assets, WAD, _acc, Math.Rounding.Ceil);
         principalScaledOf[borrower] += deltaScaled;
-        totalPrincipalScaled      += deltaScaled;
+        totalPrincipalScaled        += deltaScaled;
 
-        cash -= assets;
+        _cash -= assets;
         asset.safeTransfer(receiver, assets);
 
         emit Borrowed(borrower, receiver, assets);
         return assets;
     }
 
-    /// @notice Repago de deuda (puede pagar un tercero con onBehalfOf).
     function repay(uint256 assets, address onBehalfOf) external override nonReentrant returns (uint256) {
         if (assets == 0) return 0;
         _accrue();
@@ -115,99 +120,84 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
 
         uint256 pay = assets > debt ? debt : assets;
 
-        // pull tokens
         asset.safeTransferFrom(msg.sender, address(this), pay);
 
-        // reduce principalScaled: delta = pay / acc
-        uint256 deltaScaled = Math.mulDiv(pay, WAD, interestAccumulator, Math.Rounding.Ceil);
+        // reduce principalScaled: delta = pay / _acc
+        uint256 deltaScaled = Math.mulDiv(pay, WAD, _acc, Math.Rounding.Ceil);
         uint256 ps = principalScaledOf[onBehalfOf];
         if (deltaScaled > ps) deltaScaled = ps;
 
         principalScaledOf[onBehalfOf] = ps - deltaScaled;
         totalPrincipalScaled          -= deltaScaled;
 
-        cash += pay;
+        _cash += pay;
         emit Repaid(msg.sender, onBehalfOf, pay);
         return pay;
     }
 
     /* ===================== Accounting ===================== */
 
-    /// @notice Acumula interés global (idempotente y barato).
-    function accrue() external override {
-        _accrue();
-    }
+    function accrue() external override { _accrue(); }
 
     function _accrue() internal {
         uint64 nowTs = uint64(block.timestamp);
         uint64 dt = nowTs - lastAccrual;
         if (dt == 0) return;
 
-        uint256 borrows = totalBorrows(); // usa acc actual (ok, porque multiplicamos con el acc previo)
-        uint256 supply  = cash + borrows;
-
-        // Utilización en WAD: borrows / supply (manejar supply=0)
+        uint256 borrows = totalBorrows();
+        uint256 supply  = _cash + borrows;
         uint256 util = supply == 0 ? 0 : Math.mulDiv(borrows, WAD, supply);
 
-        // r en WAD por segundo
-        uint256 r = irm.ratePerSecond(util);
+        // IRM en RAY → convertir a WAD
+        uint256 rRay = irm.computeInterestRateView(address(this), util, 0);
+        uint256 rWad = rRay / 1e9; // RAY->WAD
 
-        // acc *= (1 + r*dt)
-        // => acc = acc * (WAD + r*dt) / WAD
-        uint256 growth = WAD + r * dt;
-        interestAccumulator = Math.mulDiv(interestAccumulator, growth, WAD);
+        // _acc *= (1 + r*dt)
+        uint256 growth = WAD + rWad * dt;
+        _acc = Math.mulDiv(_acc, growth, WAD);
 
         lastAccrual = nowTs;
-        emit Accrued(interestAccumulator, lastAccrual, r);
+        emit Accrued(_acc, lastAccrual, rWad);
     }
 
-    /// @notice Balances esperados para que el Senior calcule PnL en su harvest.
     function expectedBalances() external view override returns (
         uint256 totalSupplyAssets,
         uint256 totalBorrowAssets,
         uint256 liquidity
     ) {
-        uint256 acc = interestAccumulator;
-        uint256 borrows = Math.mulDiv(totalPrincipalScaled, acc, WAD);
-        uint256 liq = cash;
+        uint256 borrows = Math.mulDiv(totalPrincipalScaled, _acc, WAD);
+        uint256 liq = _cash;
         return (liq + borrows, borrows, liq);
     }
 
-    /// @notice Deuda actual de un borrower en assets.
     function positionOf(address borrower) external view override returns (uint256 debtAssets) {
         return _debtAssetsOf(borrower);
     }
 
     function _debtAssetsOf(address borrower) internal view returns (uint256) {
-        uint256 acc = interestAccumulator;
         uint256 ps = principalScaledOf[borrower];
         if (ps == 0) return 0;
-        return Math.mulDiv(ps, acc, WAD);
+        return Math.mulDiv(ps, _acc, WAD);
     }
 
     function totalBorrows() public view override returns (uint256) {
-        return Math.mulDiv(totalPrincipalScaled, interestAccumulator, WAD);
+        return Math.mulDiv(totalPrincipalScaled, _acc, WAD);
     }
 
-    function cash() external view override returns (uint256) {
-        return cash;
-    }
-
-    function interestAccumulator() external view override returns (uint256) {
-        return interestAccumulator;
-    }
+    /* ===== Getters que pide la interfaz sin colisiones de nombres ===== */
+    function cash() external view override returns (uint256) { return _cash; }
+    function interestAccumulator() external view override returns (uint256) { return _acc; }
 
     function interestRate() external view override returns (uint256 ratePerSecondWad) {
         uint256 borrows = totalBorrows();
-        uint256 supply  = cash + borrows;
+        uint256 supply  = _cash + borrows;
         uint256 util = supply == 0 ? 0 : Math.mulDiv(borrows, WAD, supply);
-        return irm.ratePerSecond(util);
+        uint256 rRay = irm.computeInterestRateView(address(this), util, 0);
+        return rRay / 1e9; // RAY->WAD
     }
 
     /* ===================== Risk / Loss ===================== */
 
-    /// @notice Marca pérdida irrecuperable en un borrower (no mueve cash; reduce deuda).
-    /// @dev El Senior verá este write-down como pérdida en su próximo harvest (via expectedBalances()).
     function writeDown(address borrower, uint256 lossAssets) external override onlyOwner {
         if (lossAssets == 0) return;
         _accrue();
@@ -217,8 +207,7 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
 
         uint256 loss = lossAssets > debt ? debt : lossAssets;
 
-        // reducir principalScaled en proporción a la pérdida
-        uint256 deltaScaled = Math.mulDiv(loss, WAD, interestAccumulator, Math.Rounding.Ceil);
+        uint256 deltaScaled = Math.mulDiv(loss, WAD, _acc, Math.Rounding.Ceil);
         uint256 ps = principalScaledOf[borrower];
         if (deltaScaled > ps) deltaScaled = ps;
 
@@ -237,7 +226,7 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
 
     function setCreditLineManager(address newCLM) external override onlyOwner {
         require(newCLM != address(0), "zero");
-        clm = ICreditLineManager(newCLM);
+        clm = ICreditLimitManager(newCLM);
     }
 
     function setSeniorVault(address newSenior) external override onlyOwner {
