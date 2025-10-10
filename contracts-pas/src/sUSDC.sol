@@ -10,7 +10,6 @@ import {IMarket} from "./Interfaces/IMarket.sol";
 contract SUSDC is ERC4626, Ownable {
     IMarket public market;
 
-    // Nota: no heredamos ERC20, pero inicializamos su constructor aquí.
     constructor(IERC20 usdc_, address owner_)
         ERC20("Senior USDC Vault", "sUSDC") 
         ERC4626(usdc_)                    
@@ -22,7 +21,6 @@ contract SUSDC is ERC4626, Ownable {
         market = IMarket(market_);
     }
 
-    // En v5.4 no existen after/before hooks; se sobreescriben _deposit/_withdraw
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
         super._deposit(caller, receiver, assets, shares);
         if (assets > 0) {
