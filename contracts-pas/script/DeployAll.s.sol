@@ -10,6 +10,8 @@ import {LendMarket} from "../src/Market/LendMarket.sol";
 import {IRM} from "../src/interestRateModel/IRM.sol";
 import {CreditLimitManager} from "../src/CreditLimitManager/CreditLimitManager.sol";
 import {EVaultAdapter} from "../src/Adapter/EVaultAdapter.sol";
+import {console2} from "forge-std/console2.sol";
+
 
 contract DeployAll is Script {
     // Parámetros de despliegue (puedes setearlos vía env)

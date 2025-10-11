@@ -19,7 +19,7 @@ import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
  * - totalBorrows = totalPrincipalScaled * _acc / WAD
  * - _cash: liquidity in assets held in this contract
  */
-contract Market is IMarket, Ownable, ReentrancyGuard {
+contract LendMarket is IMarket, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /* ===== Config ===== */
