@@ -12,29 +12,29 @@ import {IIRM} from "../Interfaces/IIRM.sol";
 import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
 
 /**
- * @title Market (mínimo indispensable)
- * @notice Mercado de crédito sin colateral con IRM y credit lines. El Senior (sUSDC) es el único LP.
- * - Deuda escalada: principalScaled (base = WAD)
- * - _acc (WAD) es el interest accumulator (1e18 = 1.0)
+ * @title Market (minimum viable)
+ * @notice Unsecured credit market with IRM and credit lines. The Senior (sUSDC) is the only LP.
+ * - Scaled debt: principalScaled (base = WAD)
+ * - _acc (WAD) is the interest accumulator (1e18 = 1.0)
  * - totalBorrows = totalPrincipalScaled * _acc / WAD
- * - _cash: liquidez en assets mantenida en este contrato
+ * - _cash: liquidity in assets held in this contract
  */
 contract Market is IMarket, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /* ===== Config ===== */
-    IERC20 public immutable asset;          // p.ej., USDC
-    address public seniorVault;             // sUSDC: único LP
-    IIRM public irm;                        // IRM devuelve RAY en computeInterestRateView
-    ICreditLimitManager public clm;         // gestor de líneas de crédito
+    IERC20 public immutable asset;          // e.g., USDC
+    address public seniorVault;             // sUSDC: only LP
+    IIRM public irm;                        // IRM returns RAY in computeInterestRateView
+    ICreditLimitManager public clm;         // credit line manager
 
     /* ===== Interés (WAD) ===== */
-    uint256 private _acc;                   // interest accumulator en WAD
-    uint64  public lastAccrual;             // timestamp último accrue
+    uint256 private _acc;                   // interest accumulator in WAD
+    uint64  public lastAccrual;             // timestamp of last accrue
 
     /* ===== Liquidez / Deuda ===== */
-    uint256 private _cash;                  // liquidez disponible en assets
-    uint256 public totalPrincipalScaled;    // suma de principalScaled
+    uint256 private _cash;                  // available liquidity in assets
+    uint256 public totalPrincipalScaled;    // sum of principalScaled
 
     mapping(address => uint256) public principalScaledOf; // borrower => principalScaled
 
@@ -90,7 +90,7 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
 
         address borrower = msg.sender;
 
-        // Autorización mínima: tener límite > 0 y no excederlo
+        // Minimum authorization: have a limit > 0 and not exceed it
         uint256 limit = clm.creditLimit(borrower);
         require(limit > 0, "not allowed");
 
@@ -148,7 +148,7 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
         uint256 supply  = _cash + borrows;
         uint256 util = supply == 0 ? 0 : Math.mulDiv(borrows, WAD, supply);
 
-        // IRM en RAY → convertir a WAD
+        // IRM in RAY → convert to WAD
         uint256 rRay = irm.computeInterestRateView(address(this), util, 0);
         uint256 rWad = rRay / 1e9; // RAY->WAD
 
@@ -184,7 +184,7 @@ contract Market is IMarket, Ownable, ReentrancyGuard {
         return Math.mulDiv(totalPrincipalScaled, _acc, WAD);
     }
 
-    /* ===== Getters que pide la interfaz sin colisiones de nombres ===== */
+    /* ===== Getters required by the interface without name collisions ===== */
     function cash() external view override returns (uint256) { return _cash; }
     function interestAccumulator() external view override returns (uint256) { return _acc; }
 

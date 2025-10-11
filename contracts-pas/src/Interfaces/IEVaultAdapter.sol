@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 interface IEVaultAdapter {
-    // --- ERC20 / ERC4626 surface que espera el front viejo ---
+    // --- ERC20 / ERC4626 surface expected by the old front ---
     function decimals() external view returns (uint8);
     function asset() external view returns (address);
     function balanceOf(address) external view returns (uint256);
@@ -12,7 +12,7 @@ interface IEVaultAdapter {
     function convertToAssets(uint256 shares) external view returns (uint256);
     function maxWithdraw(address owner) external view returns (uint256);
 
-    // --- Extensiones específicas del ABI anterior ---
+    // --- Specific extensions of the previous ABI ---
     function convertToJuniorAssets(uint256 jShares) external view returns (uint256);
     function availableCashAssets() external view returns (uint256);
     function psSeniorRay() external view returns (uint256);
@@ -21,13 +21,13 @@ interface IEVaultAdapter {
     function MODULE_RISKMANAGER() external view returns (address);
     function debtOf(address account) external view returns (uint256);
 
-    // --- Flujos ---
+    // --- Flows ---
     function deposit(uint256 assets, address receiver) external returns (uint256);
     function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
     function borrow(uint256 assets, address receiver) external returns (uint256);
     function repay(uint256 assets, address onBehalfOf) external returns (uint256);
 
-    // --- Junior “demote” helpers del ABI viejo ---
+    // --- Junior “demote” helpers from the old ABI ---
     function demoteToSenior(uint256 jShares, address to) external returns (uint256 sUsdcOut);
     function previewWithdrawJunior(uint256 jShares) external view returns (uint256 sUsdcOut);
 }

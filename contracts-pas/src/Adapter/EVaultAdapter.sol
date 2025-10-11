@@ -34,7 +34,7 @@ contract EVaultAdapter {
 
     /* ---------- EVault surface ---------- */
 
-    // Usa IERC20Metadata para leer decimals del token de shares (sUSDC)
+    // Use IERC20Metadata to read decimals from the shares token (sUSDC)
     function decimals() external view returns (uint8) {
         return IERC20Metadata(address(s)).decimals();
     }
@@ -44,7 +44,7 @@ contract EVaultAdapter {
     }
 
     function balanceOf(address account) external view returns (uint256) {
-        return IERC20(address(s)).balanceOf(account); // shares del senior
+        return IERC20(address(s)).balanceOf(account); // senior shares
     }
 
     function allowance(address owner, address spender) external view returns (uint256) {
@@ -62,7 +62,7 @@ contract EVaultAdapter {
     }
 
     function convertToJuniorAssets(uint256 jShares) external view returns (uint256) {
-        return j.convertToAssets(jShares); // asset de j es sUSDC
+        return j.convertToAssets(jShares); // j's asset is sUSDC
     }
 
     function availableCashAssets() external view returns (uint256) {
@@ -111,7 +111,7 @@ contract EVaultAdapter {
         return mkt.repay(assets, onBehalfOf);
     }
 
-    // “Demote” junior → redime jUSDC por sUSDC
+    // “Demote” junior → redeem jUSDC for sUSDC
     function demoteToSenior(uint256 jShares, address to) external returns (uint256 sUsdcOut) {
         sUsdcOut = j.redeem(jShares, to, msg.sender);
     }

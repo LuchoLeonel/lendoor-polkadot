@@ -6,7 +6,7 @@ import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
 /// @title CreditLimitManager (per-user)
 /// @notice Registers score (0..255) and limit per user, in asset units (e.g., USDC 6 dec)
 contract CreditLimitManager is ICreditLimitManager {
-    address public owner; // cumple owner() de la interfaz por getter público
+    address public owner; // satisfies owner() of the interface by public getter
 
     struct Line {
         uint8   score;   // 0..255
