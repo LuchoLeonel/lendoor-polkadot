@@ -26,7 +26,7 @@ contract EVaultAdapter {
     ) {
         s = IERC4626(_s);
         j = IERC4626(_j);
-        mkt = IMarket(_mkt);
+        mkt = ILendMarket(_mkt);
         usdc = IERC20(_usdc);
         irm = _irm;
         riskManagerShim = _riskManagerShim;
