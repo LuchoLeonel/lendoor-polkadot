@@ -12,7 +12,6 @@ import {CreditLimitManager} from "../src/CreditLimitManager/CreditLimitManager.s
 import {EVaultAdapter} from "../src/Adapter/EVaultAdapter.sol";
 import {console2} from "forge-std/console2.sol";
 
-
 contract DeployAll is Script {
     // Parámetros de despliegue (puedes setearlos vía env)
     uint256 public aprBps;     // p.ej. 800 = 8% APR
