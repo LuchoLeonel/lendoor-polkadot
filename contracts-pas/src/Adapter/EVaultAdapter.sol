@@ -52,11 +52,6 @@ contract EVaultAdapter {
         return usdc.allowance(owner, spender);
     }
 
-    function approve(address spender, uint256 amount) external returns (bool) {
-        if (spender == address(this)) spender = address(s);
-        return usdc.approve(spender, amount);
-    }
-
     function convertToAssets(uint256 shares) external view returns (uint256) {
         return s.convertToAssets(shares);
     }

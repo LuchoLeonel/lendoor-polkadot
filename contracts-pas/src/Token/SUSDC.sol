@@ -18,7 +18,7 @@ contract SUSDC is ERC4626, Ownable {
 
     function setMarket(address market_) external onlyOwner {
         require(market_ != address(0), "market=0");
-        market = IMarket(market_);
+        market = ILendMarket(market_);
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
