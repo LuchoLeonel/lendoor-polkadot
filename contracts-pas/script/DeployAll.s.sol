@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Script} from  "forge-std/Script.sol";
 
-import {MockUSDC} from "../src/Token/MockUSDC.sol";
+import {USDCMock} from "../src/Token/USDCMock.sol";
 import {SUSDC}    from "../src/Token/SUSDC.sol";
 import {JUSDC}    from "../src/Token/JUSDC.sol";
 import {LendMarket} from "../src/Market/LendMarket.sol";
@@ -25,7 +25,7 @@ contract DeployAll is Script {
         vm.startBroadcast(pk);
 
         // 1) Subir USDC mock
-        MockUSDC usdc = new MockUSDC();
+        USDCMock usdc = new USDCMock();
 
         // 2) Subir IRM (modelo de tasa) y CLM (líneas de crédito)
         IRM irm = new IRM(aprBps);

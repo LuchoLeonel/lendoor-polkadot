@@ -8,7 +8,7 @@ import {ERC20} from "@openzeppelin-contracts/token/ERC20/ERC20.sol";
  * @notice USDC-like test token with a mint function open to anyone.
  * @dev    Use ONLY on testnet/dev! In production, protect the mint with roles.
  */
-contract MockUSDC is ERC20 {
+contract USDCMock is ERC20 {
     constructor() ERC20("USD Coin (Mock)", "USDC") {}
 
     /// @dev USDC uses 6 decimals.

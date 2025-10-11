@@ -2,14 +2,14 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import {MockUSDC} from "../src/Token/MockUSDC.sol";
+import {USDCMock} from "../src/Token/USDCMock.sol";
 
 contract DeployMockUSDC is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(pk);
 
-        MockUSDC usdc = new MockUSDC();
+        USDCMock usdc = new USDCMock();
 
         vm.stopBroadcast();
 
