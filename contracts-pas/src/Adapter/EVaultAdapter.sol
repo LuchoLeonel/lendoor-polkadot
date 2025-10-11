@@ -5,13 +5,13 @@ import {IERC20} from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC4626} from "@openzeppelin-contracts/interfaces/IERC4626.sol";
 
-import {IMarket} from "../Interfaces/IMarket.sol";
+import {ILendMarket} from "../Interfaces/ILendMarket.sol";
 import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
 
 contract EVaultAdapter {
     IERC4626 public immutable s;   // sUSDC (vault senior, ERC4626)
     IERC4626 public immutable j;   // jUSDC (vault junior, ERC4626)
-    IMarket  public immutable mkt; // Market
+    ILendMarket  public immutable mkt; // Market
     IERC20   public immutable usdc;
     address  public immutable irm;
     address  public immutable riskManagerShim;

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title IMarket
 /// @notice Credit market (not a vault). Manages debt, interest and liquidity.
-interface IMarket {
+interface ILendMarket {
     /* ===== LP (Senior) ===== */
     function supplyFromSenior(uint256 assets) external;
     function withdrawToSenior(uint256 assets) external;

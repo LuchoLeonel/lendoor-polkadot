@@ -7,7 +7,7 @@ import {SafeERC20} from "@openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol
 import {Math} from "@openzeppelin-contracts/utils/math/Math.sol";
 import {Ownable} from "@openzeppelin-contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin-contracts/utils/ReentrancyGuard.sol";
-import {IMarket} from "../Interfaces/IMarket.sol";
+import {ILendMarket} from "../Interfaces/ILendMarket.sol";
 import {IIRM} from "../Interfaces/IIRM.sol";
 import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
 
@@ -19,7 +19,7 @@ import {ICreditLimitManager} from "../Interfaces/ICreditLimitManager.sol";
  * - totalBorrows = totalPrincipalScaled * _acc / WAD
  * - _cash: liquidity in assets held in this contract
  */
-contract LendMarket is IMarket, Ownable, ReentrancyGuard {
+contract LendMarket is ILendMarket, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /* ===== Config ===== */
