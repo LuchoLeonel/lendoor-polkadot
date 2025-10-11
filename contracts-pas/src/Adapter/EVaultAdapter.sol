@@ -110,7 +110,10 @@ contract EVaultAdapter {
     function demoteToSenior(uint256 jShares, address to) external returns (uint256 sUsdcOut) {
         sUsdcOut = j.redeem(jShares, to, msg.sender);
     }
+
     function previewWithdrawJunior(uint256 jShares) external view returns (uint256) {
         return j.convertToAssets(jShares);
     }
 }
+
+
