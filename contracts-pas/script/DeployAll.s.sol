@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Script.sol";
+import {Script} from  "forge-std/Script.sol";
 
 import {MockUSDC} from "../src/Token/MockUSDC.sol";
 import {SUSDC}    from "../src/Token/SUSDC.sol";
 import {JUSDC}    from "../src/Token/JUSDC.sol";
 import {LendMarket} from "../src/Market/LendMarket.sol";
-import {IRM}      from "../src/IRM/IRM.sol";
+import {IRM} from "../src/interestRateModel/IRM.sol";
 import {CreditLimitManager} from "../src/CreditLimitManager/CreditLimitManager.sol";
 import {EVaultAdapter} from "../src/Adapter/EVaultAdapter.sol";
 
