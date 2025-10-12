@@ -50,7 +50,7 @@ export function formatUSDCAmount2dp(value: bigint | string, decimals = DECIMALS_
 }
 
 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const baseImageUrl = isLocal ? 'http://localhost:3003' : 'https://lendoor.xyz';
+const baseImageUrl = isLocal ? 'http://localhost:3003' : 'https://polkadot.lendoor.xyz';
 
 export const evmNetworks = [
   {
