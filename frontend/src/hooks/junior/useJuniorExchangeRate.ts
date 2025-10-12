@@ -4,49 +4,50 @@ import * as React from 'react'
 import { Contract } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
 
-const ABI = [
-  'function decimals() view returns (uint8)',
-  'function asset() view returns (address)',
-  'function convertToJuniorAssets(uint256) view returns (uint256)',
-] as const
-
 const ERC20_DEC_ABI = ['function decimals() view returns (uint8)'] as const
 
 type Options = { pollMs?: number }
 
-/** jUSDC/USDC -> display "1/<USDC per 1 jUSDC>" (mismo estilo que sUSDC/USDC) */
+/**
+ * jUSDC/USDC -> display “1/<USDC per 1 jUSDC>”
+ * Flow: 1 j-share -> jUSDC.convertToAssets -> s-shares -> sUSDC.convertToAssets -> USDC(6)
+ */
 export function useJuniorExchangeRate({ pollMs = 30_000 }: Options = {}) {
-  const { evault, evaultAddress, usdcDecimals } = useContracts()
+  const { jUSDC, sUSDC, usdcDecimals } = useContracts()
   const [rate, setRate] = React.useState<number | null>(null) // USDC per 1 jUSDC
   const [loading, setLoading] = React.useState(false)
 
+  // Prefer jUSDC runner/provider; fallback to sUSDC
   const runner = React.useMemo(
-    () => (evault as any)?.runner ?? (evault as any)?.provider ?? null,
-    [evault],
+    () =>
+      ((jUSDC as any)?.runner ?? (jUSDC as any)?.provider ??
+        (sUSDC as any)?.runner ?? (sUSDC as any)?.provider) || null,
+    [jUSDC, sUSDC],
   )
 
   const read = React.useCallback(async () => {
-    if (!evaultAddress || !runner) return
+    if (!jUSDC || !sUSDC) return
     setLoading(true)
     try {
-      const v = new Contract(evaultAddress, ABI as any, runner)
+      // jUSDC share decimals (typically 18)
+      const jDec: number = Number(await (jUSDC as any).decimals())
 
-      // j-share decimals (son los mismos que el eToken)
-      const jDec: number = Number(await v.decimals())
-
-      // USDC decimals (usa los del provider si ya los tenemos)
+      // USDC decimals: use from context if available; otherwise read from sUSDC.asset()
       let aDec = usdcDecimals ?? 6
-      if (usdcDecimals == null) {
-        const assetAddr: string = await v.asset()
-        const token = new Contract(assetAddr, ERC20_DEC_ABI as any, runner)
+      if (usdcDecimals == null && runner) {
+        const usdcAddr: string = await (sUSDC as any).asset()
+        const token = new Contract(usdcAddr, ERC20_DEC_ABI, runner)
         aDec = Number(await token.decimals())
       }
 
-      // 1 jUSDC en base units -> USDC base units
+      // 1 jUSDC share -> sUSDC shares
       const oneJ = 10n ** BigInt(jDec)
-      const assetsUSDC: bigint = await v.convertToJuniorAssets(oneJ)
+      const sShares: bigint = await (jUSDC as any).convertToAssets(oneJ)
 
-      // USDC per 1 jUSDC
+      // sUSDC shares -> USDC (aDec, usually 6)
+      const assetsUSDC: bigint = await (sUSDC as any).convertToAssets(sShares)
+
+      // USDC per 1 jUSDC (human-readable number)
       const r = Number(assetsUSDC) / 10 ** aDec
       setRate(r)
     } catch {
@@ -54,7 +55,7 @@ export function useJuniorExchangeRate({ pollMs = 30_000 }: Options = {}) {
     } finally {
       setLoading(false)
     }
-  }, [evaultAddress, runner, usdcDecimals])
+  }, [jUSDC, sUSDC, runner, usdcDecimals])
 
   React.useEffect(() => {
     void read()

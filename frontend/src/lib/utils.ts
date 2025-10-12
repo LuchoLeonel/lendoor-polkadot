@@ -7,29 +7,47 @@ import { formatUnits } from 'ethers'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-export const DECIMALS = 4;
+export const DECIMALS_USDC = 4;
+export const DECIMALS_4616 = 14;
 
-export function formatUSDCAmount(value: bigint | string): string {
-  const asString = typeof value === 'bigint' ? formatUnits(value, DECIMALS) : value
-  const num = Number(asString)
-  if (!isFinite(num)) return asString
-  return new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: 6,
-    minimumFractionDigits: 0,
-  }).format(num).replace(/(\.\d*?[1-9])0+$/u, '$1').replace(/\.0+$/u, '')
+
+/** Rescale bigint between decimal systems (floors on downscale). */
+export function scaleDecimals(value: bigint, fromDec: number, toDec: number): bigint {
+  const f = BigInt(fromDec)
+  const t = BigInt(toDec)
+  if (t === f) return value
+  if (t > f) return value * 10n ** (t - f)
+  return value / 10n ** (f - t)
 }
 
-export function formatUSDCAmount2dp(value: bigint | string): string {
-  const asString = typeof value === 'bigint' ? formatUnits(value, DECIMALS) : value
-  const num = Number(asString)
-  if (!isFinite(num)) return asString
+/** Internal: normalize a bigint/string (UI-based) to a JS number using given decimals. */
+function toUiNumber(value: bigint | string, decimals: number): number | null {
+  const s = typeof value === 'bigint' ? formatUnits(value, decimals) : value
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+
+/** Format a USDC UI amount (default `DECIMALS_USDC`) with up to 6 fractional digits, trimming trailing zeros. */
+export function formatUSDCAmount(value: bigint | string, decimals = DECIMALS_USDC): string {
+  const n = toUiNumber(value, decimals)
+  if (n == null) return typeof value === 'bigint' ? value.toString() : value
+  const out = new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 6,
+    minimumFractionDigits: 0,
+  }).format(n)
+  // Trim trailing zeros like "1.230000" -> "1.23", "2.0" -> "2"
+  return out.replace(/(\.\d*?[1-9])0+$/u, '$1').replace(/\.0+$/u, '')
+}
+
+/** Format a USDC UI amount (default `DECIMALS_USDC`) with exactly 2 fractional digits. */
+export function formatUSDCAmount2dp(value: bigint | string, decimals = DECIMALS_USDC): string {
+  const n = toUiNumber(value, decimals)
+  if (n == null) return typeof value === 'bigint' ? value.toString() : value
   return new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
-  }).format(num)
+  }).format(n)
 }
-
-
 
 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 const baseImageUrl = isLocal ? 'http://localhost:3003' : 'https://lendoor.xyz';

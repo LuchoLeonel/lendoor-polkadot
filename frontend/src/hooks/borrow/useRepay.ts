@@ -3,21 +3,38 @@
 import * as React from 'react'
 import { parseUnits } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS } from '@/lib/utils'
+import { DECIMALS_USDC } from '@/lib/utils'
 import { toast } from 'sonner'
 
-const msg = (e: any) => e?.shortMessage || e?.reason || e?.message || 'Transaction failed'
+const err = (e: any) => e?.shortMessage || e?.reason || e?.message || 'Transaction failed'
+
+/** Rescale bigint between decimals (floors on downscale). */
+function scaleDecimals(value: bigint, fromDec: number, toDec: number): bigint {
+  const f = BigInt(fromDec)
+  const t = BigInt(toDec)
+  if (t === f) return value
+  if (t > f) return value * 10n ** (t - f)
+  return value / 10n ** (f - t)
+}
 
 /**
- * Handles USDC -> EVault repay flow:
- * - Parses input amount to base units (configurable decimals)
- * - Checks wallet balance
- * - Ensures allowance (approve if needed)
- * - Calls evault.repay(amount, connectedAddress)
- * - Exposes submitting state and a submit(amount) action
+ * USDC -> LendMarket repay flow:
+ * - Parses input (USDC UI units, DECIMALS_USDC)
+ * - Checks wallet balance (USDC on-chain, usually 6)
+ * - Ensures allowance to LendMarket
+ * - Calls lendMarket.repay(amount6, connectedAddress)
  */
 export function useRepay() {
-  const { evault, evaultAddress, usdc, connectedAddress, refresh } = useContracts()
+  const {
+    lendMarket,
+    lendMarketAddress,
+    usdc,
+    connectedAddress,
+    refresh,
+    usdcDecimals,
+  } = useContracts()
+  const aDec = usdcDecimals ?? 6
+
   const [submitting, setSubmitting] = React.useState(false)
 
   const submit = React.useCallback(
@@ -27,19 +44,24 @@ export function useRepay() {
         return false
       }
 
-      if (!evault || !evaultAddress || !usdc || !connectedAddress) {
+      if (!lendMarket || !lendMarketAddress || !usdc || !connectedAddress) {
         toast.error('Missing setup', {
-          description: 'Vault/USDC contracts or addresses are not ready.',
+          description: 'Market/USDC contracts or addresses are not ready.',
         })
         return false
       }
 
-      // Parse amount
-      let amount: bigint
+      // Parse amount: UI(DECIMALS_USDC) -> UI base -> USDC(aDec)
+      let amount6: bigint
       try {
-        amount = parseUnits(amountInput.trim(), DECIMALS)
-        if (amount <= 0n) {
+        const uiBase = parseUnits(amountInput.trim(), DECIMALS_USDC)
+        if (uiBase <= 0n) {
           toast.error('Amount must be greater than 0.')
+          return false
+        }
+        amount6 = scaleDecimals(uiBase, DECIMALS_USDC, aDec)
+        if (amount6 <= 0n) {
+          toast.error('Amount too small.')
           return false
         }
       } catch {
@@ -52,8 +74,8 @@ export function useRepay() {
 
       try {
         // 1) Wallet balance check
-        const bal: bigint = await (usdc as any).balanceOf(connectedAddress)
-        if (bal < amount) {
+        const bal6: bigint = await (usdc as any).balanceOf(connectedAddress)
+        if (bal6 < amount6) {
           toast.dismiss(tLoading)
           toast.error('Insufficient balance', {
             description: 'Your USDC balance is not enough for this repayment.',
@@ -62,32 +84,32 @@ export function useRepay() {
         }
 
         // 2) Allowance check (approve if needed)
-        const allowance: bigint = await (usdc as any).allowance(connectedAddress, evaultAddress)
-        if (allowance < amount) {
-          const txA = await (usdc as any).approve(evaultAddress, amount)
+        const allowance6: bigint = await (usdc as any).allowance(connectedAddress, lendMarketAddress)
+        if (allowance6 < amount6) {
+          const txA = await (usdc as any).approve(lendMarketAddress, amount6)
           await txA.wait()
           toast.success('Approval confirmed')
         }
 
-        // 3) Repay
-        const tx = await (evault as any).repay(amount, connectedAddress)
+        // 3) Repay on LendMarket
+        const tx = await (lendMarket as any).repay(amount6, connectedAddress)
         await tx.wait()
 
         toast.success('Repayment confirmed', {
           description: 'Your outstanding balance has been reduced.',
         })
 
-        await refresh?.() // refresh app state (balances, debt, etc.)
+        await refresh?.() // refresh balances/debt/etc.
         return true
       } catch (e: any) {
-        toast.error('Repay failed', { description: msg(e) })
+        toast.error('Repay failed', { description: err(e) })
         return false
       } finally {
         toast.dismiss(tLoading)
         setSubmitting(false)
       }
     },
-    [evault, evaultAddress, usdc, connectedAddress, refresh]
+    [lendMarket, lendMarketAddress, usdc, connectedAddress, refresh, aDec],
   )
 
   return { submit, submitting }

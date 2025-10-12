@@ -3,57 +3,70 @@
 import * as React from 'react'
 import { Contract, formatUnits } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS } from '@/lib/utils' // your demo display precision (e.g. 4)
+import { DECIMALS_4616 } from '@/lib/utils' // UI scale for ERC-4626 shares
 
-const JWRAP_ABI = [
-  'function maxWithdraw(address owner) view returns (uint256)', // returns e-shares (sUSDC) in base units
-  'function decimals() view returns (uint8)',                   // on-chain decimals of sUSDC (e-shares)
-] as const
+const ERC20_DEC_ABI = ['function decimals() view returns (uint8)'] as const
 
 type Options = { pollMs?: number }
 
 /**
- * Reads max e-shares (sUSDC) withdrawable from the junior wrapper,
- * scales to human using on-chain decimals, then rescale for UI with DECIMALS.
- * Example: on-chain 6, UI 4 → multiply by 10^(6-4)=100. So 0.2922 → 29.22.
+ * Reads the maximum sUSDC (assets) withdrawable from the junior vault (jUSDC),
+ * then rescales that on-chain amount (typically 18 decimals) into UI units (DECIMALS_4616).
+ *
+ * jUSDC.maxWithdraw(owner) returns ASSETS (sUSDC), not j-shares.
+ * - rawSShares: sUSDC amount in on-chain base units (usually 18)
+ * - uiAmount:   human number scaled to DECIMALS_4616 for UI
  */
 export function useJuniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) {
-  const { evault, evaultJuniorAddress, connectedAddress } = useContracts()
+  const { jUSDC, sUSDC, connectedAddress } = useContracts()
 
-  const [rawSShares, setRawSShares] = React.useState<bigint | null>(null) // raw base units (on-chain)
-  const [sDec, setSDec] = React.useState<number | null>(null)             // on-chain decimals
-  const [uiAmount, setUiAmount] = React.useState<number | null>(null)     // rescaled for UI (DECIMALS)
+  const [rawSShares, setRawSShares] = React.useState<bigint | null>(null) // sUSDC assets (on-chain units)
+  const [sDec, setSDec] = React.useState<number | null>(null)             // on-chain decimals of sUSDC
+  const [uiAmount, setUiAmount] = React.useState<number | null>(null)     // scaled to UI (DECIMALS_4616)
   const [loading, setLoading] = React.useState(false)
 
-  // Provider/runner for read-only calls
+  // Prefer jUSDC runner; fallback to provider
   const runner = React.useMemo(
-    () => (evault as any)?.runner ?? (evault as any)?.provider ?? null,
-    [evault],
+    () => ((jUSDC as any)?.runner ?? (jUSDC as any)?.provider) || null,
+    [jUSDC],
   )
 
   const read = React.useCallback(async () => {
-    if (!evaultJuniorAddress || !connectedAddress || !runner) return
+    if (!jUSDC || !connectedAddress) return
     setLoading(true)
     try {
-      const j = new Contract(evaultJuniorAddress, JWRAP_ABI as any, runner)
-
-      // 1) Raw amount in base units (sUSDC e-shares)
-      const sOut: bigint = await j.maxWithdraw(connectedAddress)
+      // 1) Raw max withdraw in sUSDC assets (on-chain units)
+      const sOut: bigint = await (jUSDC as any).maxWithdraw(connectedAddress)
       setRawSShares(sOut)
 
-      // 2) On-chain decimals for sUSDC (e-shares)
-      const onChainDec = Number(await j.decimals())
+      // 2) Resolve on-chain decimals for sUSDC
+      let onChainDec: number | null = null
+      try {
+        if (sUSDC) {
+          onChainDec = Number(await (sUSDC as any).decimals())
+        } else if (runner) {
+          const assetAddr: string = await (jUSDC as any).asset()
+          const token = new Contract(assetAddr, ERC20_DEC_ABI as any, runner)
+          onChainDec = Number(await token.decimals())
+        }
+      } catch {
+        onChainDec = null
+      }
       setSDec(onChainDec)
 
-      // 3) Human (on-chain) units
-      const humanStr = formatUnits(sOut, onChainDec)
-      const humanNum = Number(humanStr)
-
-      // 4) Rescale to UI decimals: multiply by 10^(onChainDec - DECIMALS)
-      if (Number.isFinite(humanNum)) {
-        const delta = onChainDec - DECIMALS
-        const scale = Math.pow(10, delta)
-        setUiAmount(humanNum * scale)
+      // 3) Compute UI amount (scale on-chain -> UI DECIMALS_4616)
+      if (onChainDec != null) {
+        // human = sOut / 10^onChainDec
+        const humanStr = formatUnits(sOut, onChainDec)
+        const humanNum = Number(humanStr)
+        if (Number.isFinite(humanNum)) {
+          // ui = human * 10^(onChainDec - DECIMALS_4616)
+          const delta = onChainDec - DECIMALS_4616
+          const scale = Math.pow(10, delta)
+          setUiAmount(humanNum * scale)
+        } else {
+          setUiAmount(null)
+        }
       } else {
         setUiAmount(null)
       }
@@ -64,7 +77,7 @@ export function useJuniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
     } finally {
       setLoading(false)
     }
-  }, [evaultJuniorAddress, connectedAddress, runner])
+  }, [jUSDC, sUSDC, connectedAddress, runner])
 
   React.useEffect(() => {
     void read()
@@ -73,13 +86,13 @@ export function useJuniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
     return () => clearInterval(id)
   }, [read, pollMs])
 
-  // Display with your UI precision (DECIMALS) and the correct token label
+  // Display with UI precision (DECIMALS_4616) and token label
   const display =
     uiAmount == null
       ? '—'
       : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 0,
-          maximumFractionDigits: DECIMALS,
+          maximumFractionDigits: DECIMALS_4616,
         }).format(uiAmount)} sUSDC`
 
   return { rawSShares, sDecimals: sDec, uiAmount, display, loading, refresh: read }

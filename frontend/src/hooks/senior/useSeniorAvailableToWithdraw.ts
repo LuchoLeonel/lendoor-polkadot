@@ -1,38 +1,40 @@
 'use client'
 
 import * as React from 'react'
-import { Contract, formatUnits } from 'ethers'
+import { formatUnits } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS } from '@/lib/utils' // UI/demo precision (e.g. 4)
+import { DECIMALS_USDC } from '@/lib/utils' // UI precision (e.g., 4)
 
 type Options = { pollMs?: number }
 
-const EVAULT_ABI = [
-  'function maxWithdraw(address) view returns (uint256)',     // assets (USDC, on-chain decimals)
-  'function balanceOf(address) view returns (uint256)',       // senior shares (sUSDC)
-  'function convertToAssets(uint256) view returns (uint256)', // shares -> USDC
-  'function availableCashAssets() view returns (uint256)',    // pool reserves in USDC
-] as const
-
+/**
+ * Senior (sUSDC) withdrawable amount for the connected user.
+ * Primary source: sUSDC.maxWithdraw(user) → underlying USDC (on-chain decimals).
+ * If that returns 0, we diagnose using:
+ *  - sUSDC.balanceOf(user) → shares
+ *  - sUSDC.convertToAssets(shares) → theoretical assets
+ *  - LendMarket.expectedBalances().liquidity → pool cash
+ * Then we take soft = min(theoretical assets, cash) and label the reason.
+ */
 export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) {
-  const { evault, evaultAddress, connectedAddress, usdcDecimals } = useContracts()
+  const { sUSDC, lendMarket, connectedAddress, usdcDecimals } = useContracts()
   const dec = usdcDecimals ?? 6
 
-  const [rawUSDC, setRawUSDC] = React.useState<bigint | null>(null)
-  const [uiAmount, setUiAmount] = React.useState<number | null>(null)
+  const [rawUSDC, setRawUSDC] = React.useState<bigint | null>(null) // USDC in on-chain decimals (typically 6)
+  const [uiAmount, setUiAmount] = React.useState<number | null>(null) // scaled for UI (DECIMALS_USDC)
   const [diagnosis, setDiagnosis] = React.useState<
     'ok' | 'no-liquidity' | 'no-balance' | 'controller-or-disabled' | 'unknown'
   >('unknown')
   const [loading, setLoading] = React.useState(false)
 
-  // Re-scale raw (on-chain) assets to UI units using DECIMALS.
+  // Scale raw on-chain assets → UI units using DECIMALS_USDC
   const toUi = React.useCallback(
     (raw: bigint): number | null => {
       try {
-        const human = Number(formatUnits(raw, dec))          // e.g., 0.7022
+        const human = Number(formatUnits(raw, dec)) // e.g., 0.7022
         if (!Number.isFinite(human)) return null
-        const scale = Math.pow(10, dec - DECIMALS)           // e.g., 10^(6-4)=100
-        return human * scale                                 // e.g., 70.22
+        const scale = Math.pow(10, dec - DECIMALS_USDC) // e.g., 10^(6-4)=100
+        return human * scale // e.g., 70.22
       } catch {
         return null
       }
@@ -40,19 +42,12 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
     [dec],
   )
 
-  const runner = React.useMemo(
-    () => (evault as any)?.runner ?? (evault as any)?.provider ?? null,
-    [evault],
-  )
-
   const read = React.useCallback(async () => {
-    if (!evaultAddress || !connectedAddress || !runner) return
+    if (!sUSDC || !connectedAddress) return
     setLoading(true)
     try {
-      const v = new Contract(evaultAddress, EVAULT_ABI as any, runner)
-
-      // 1) Hard limit from the contract
-      const max: bigint = await v.maxWithdraw(connectedAddress)
+      // 1) Hard limit: max withdrawable in underlying assets
+      const max: bigint = await (sUSDC as any).maxWithdraw(connectedAddress)
       if (max > 0n) {
         setRawUSDC(max)
         setUiAmount(toUi(max))
@@ -60,8 +55,8 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
         return
       }
 
-      // 2) Diagnostics when hard limit is 0
-      const shares: bigint = await v.balanceOf(connectedAddress)
+      // 2) Fallback diagnostics
+      const shares: bigint = await (sUSDC as any).balanceOf(connectedAddress)
       if (shares === 0n) {
         setRawUSDC(0n)
         setUiAmount(0)
@@ -69,14 +64,25 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
         return
       }
 
-      const assetsFromShares: bigint = await v.convertToAssets(shares)
-      const cash: bigint = await v.availableCashAssets()
-      const soft = assetsFromShares < cash ? assetsFromShares : cash
+      const assetsFromShares: bigint = await (sUSDC as any).convertToAssets(shares)
+
+      // Pool liquidity from LendMarket if available
+      let cash: bigint | null = null
+      try {
+        if (lendMarket) {
+          const [, , liq]: [bigint, bigint, bigint] = await (lendMarket as any).expectedBalances()
+          cash = liq
+        }
+      } catch {
+        cash = null
+      }
+
+      const soft = cash == null ? assetsFromShares : (assetsFromShares < cash ? assetsFromShares : cash)
 
       setRawUSDC(soft)
       setUiAmount(toUi(soft))
       if (cash === 0n) setDiagnosis('no-liquidity')
-      else if (soft > 0n) setDiagnosis('controller-or-disabled')
+      else if (soft > 0n && max === 0n) setDiagnosis('controller-or-disabled')
       else setDiagnosis('unknown')
     } catch {
       setRawUSDC(0n)
@@ -85,7 +91,7 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
     } finally {
       setLoading(false)
     }
-  }, [evaultAddress, connectedAddress, runner, toUi])
+  }, [sUSDC, lendMarket, connectedAddress, toUi])
 
   React.useEffect(() => {
     void read()
@@ -99,7 +105,7 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
       ? '—'
       : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 0,
-          maximumFractionDigits: DECIMALS,
+          maximumFractionDigits: DECIMALS_USDC,
         }).format(uiAmount)} USDC`
 
   return { rawUSDC, uiAmount, decimals: dec, display, loading, refresh: read, diagnosis }

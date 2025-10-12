@@ -7,7 +7,7 @@ import {USDCMock} from "../src/Token/USDCMock.sol";
 import {SUSDC}    from "../src/Token/SUSDC.sol";
 import {JUSDC}    from "../src/Token/JUSDC.sol";
 import {LendMarket} from "../src/Market/LendMarket.sol";
-import {IRM} from "../src/interestRateModel/IRM.sol";
+import {IRM} from "../src/InterestRateModel/IRM.sol";
 import {CreditLimitManager} from "../src/CreditLimitManager/CreditLimitManager.sol";
 import {EVaultAdapter} from "../src/Adapter/EVaultAdapter.sol";
 import {console2} from "forge-std/console2.sol";

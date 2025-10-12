@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input'
 import { useContracts } from '@/providers/ContractsProvider'
 import { useUser } from '@/providers/UserProvider'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { DECIMALS } from '@/lib/utils'
+import { DECIMALS_USDC, DECIMALS_4616 } from '@/lib/utils'
 
 /**
- * /test — calls direct contract methods:
- * Senior: approve (USDC→EVault), deposit, borrow, repay, withdraw
- * Junior: approve (sUSDC→Junior), deposit (sUSDC→jUSDC), demoteToSenior (jUSDC→sUSDC)
+ * /test — direct calls using the **new stack**:
+ * Senior:
+ *   - approve (USDC → sUSDC), sUSDC.deposit, LendMarket.borrow, LendMarket.repay, sUSDC.withdraw
+ * Junior:
+ *   - approve (sUSDC → jUSDC), jUSDC.deposit (s→j), jUSDC.redeem (j→s)
  * Shows last tx (hash + logs), basic reads, and adds noindex meta.
  */
 
@@ -47,17 +49,25 @@ export default function Test() {
   const {
     connectedAddress,
     chainId,
-    evault,
-    evaultAddress,
-    evaultJunior,
-    evaultJuniorAddress,
+
+    // Contracts
     usdc,
     usdcAddress,
-    controller,
+    sUSDC,
+    sUSDCAddress,
+    jUSDC,
+    jUSDCAddress,
+    lendMarket,
+    lendMarketAddress,
+
+    // Helpers
     refresh: refreshContracts,
+    usdcDecimals,
   } = useContracts()
 
-  // reads formateados
+  const aDec = usdcDecimals ?? 6 // on-chain USDC decimals
+
+  // formatted reads (from your UserProvider)
   const {
     creditLimitDisplay,
     borrowedDisplay,
@@ -69,8 +79,11 @@ export default function Test() {
 
   const { primaryWallet, setShowAuthFlow } = useDynamicContext()
 
-  const [amtSenior, setAmtSenior] = React.useState('') // USDC/sUSDC
-  const [amtJunior, setAmtJunior] = React.useState('') // sUSDC (for both junior deposit and demote target)
+  // Inputs:
+  // - amtUSDC: UI amount for USDC assets (uses DECIMALS_USDC)
+  // - amtSShare: UI amount for sUSDC shares (uses DECIMALS_4616)
+  const [amtUSDC, setAmtUSDC] = React.useState('')   // USDC (deposit/borrow/repay/withdraw)
+  const [amtSShare, setAmtSShare] = React.useState('') // sUSDC shares (deposit to j / redeem j->s)
   const [busy, setBusy] = React.useState(false)
   const [lastTx, setLastTx] = React.useState<{ label: string; hash: string; logs: number } | null>(null)
 
@@ -111,16 +124,20 @@ export default function Test() {
     }
   }, [primaryWallet, refreshContracts])
 
-  // helpers
-  const toBase = React.useCallback((v: string): bigint | null => {
+  // ===== helpers =====
+  const clean = (v: string) => (v || '').replace(/[_,\s]/g, '')
+
+  // parse UI → base bigint with chosen decimals (returns null if empty/zero/invalid)
+  const toBase = React.useCallback((v: string, decimals: number): bigint | null => {
     try {
-      const cleaned = (v || '').replace(/[_,\s]/g, '')
+      const cleaned = clean(v)
       if (!cleaned) return null
-      const x = parseUnits(cleaned, DECIMALS)
+      const x = parseUnits(cleaned, decimals)
       return x > 0n ? x : null
     } catch { return null }
   }, [])
 
+  // unified tx runner with toasts + receipt summary
   const runTx = React.useCallback(async (label: string, fn: () => Promise<any>) => {
     if (!account) return toast.error('Connect your wallet to continue.')
     if (!networkOk) return toast.error('Wrong network', { description: 'Please switch to Paseo testnet.' })
@@ -142,74 +159,83 @@ export default function Test() {
     }
   }, [account, networkOk, refreshContracts])
 
-  // ========= Senior (USDC/sUSDC) — direct calls =========
+  // ========= Senior (USDC / sUSDC) =========
+
+  // approve USDC -> sUSDC (spender = sUSDC address)
   const onApproveUSDC = React.useCallback(async () => {
-    if (!usdc || !evaultAddress) return toast.error('USDC or EVault not ready.')
-    const amt = toBase(amtSenior); if (!amt) return toast.error('Enter a valid amount.')
-    await runTx('Approve USDC', async () => (usdc as any).approve(evaultAddress, amt))
-  }, [usdc, evaultAddress, amtSenior, toBase, runTx])
+    if (!usdc || !sUSDCAddress) return toast.error('USDC or sUSDC not ready.')
+    const amt = toBase(amtUSDC, DECIMALS_USDC); if (!amt) return toast.error('Enter a valid USDC amount.')
+    await runTx('Approve USDC', async () => (usdc as any).approve(sUSDCAddress, amt))
+  }, [usdc, sUSDCAddress, amtUSDC, toBase, runTx])
 
+  // deposit USDC -> sUSDC
   const onDepositUSDC = React.useCallback(async () => {
-    if (!evault || !account) return toast.error('EVault not ready.')
-    const amt = toBase(amtSenior); if (!amt) return toast.error('Enter a valid amount.')
-    await runTx('Deposit', async () => (evault as any).deposit(amt, account))
-  }, [evault, account, amtSenior, toBase, runTx])
+    if (!sUSDC || !account) return toast.error('sUSDC not ready.')
+    const amt = toBase(amtUSDC, DECIMALS_USDC); if (!amt) return toast.error('Enter a valid USDC amount.')
+    await runTx('Deposit USDC → sUSDC', async () => (sUSDC as any).deposit(amt, account))
+  }, [sUSDC, account, amtUSDC, toBase, runTx])
 
+  // borrow from market (USDC)
   const onBorrow = React.useCallback(async () => {
-    if (!evault || !account) return toast.error('EVault not ready.')
-    const amt = toBase(amtSenior); if (!amt) return toast.error('Enter a valid amount.')
-    await runTx('Borrow', async () => {
-      if (controller) {
-        try {
-          const txCtrl = await (controller as any).enableController(account, evaultAddress)
-          await txCtrl.wait()
-        } catch (e: any) {
-          const m = err(e).toLowerCase()
-          if (!m.includes('already') && !m.includes('enabled')) throw e
-        }
-      }
-      return (evault as any).borrow(amt, account)
-    })
-  }, [evault, controller, evaultAddress, account, amtSenior, toBase, runTx])
+    if (!lendMarket || !account) return toast.error('LendMarket not ready.')
+    const amt = toBase(amtUSDC, DECIMALS_USDC); if (!amt) return toast.error('Enter a valid USDC amount.')
+    // Convert UI (DECIMALS_USDC) to on-chain USDC decimals (aDec)
+    const amt6 = (() => {
+      const from = BigInt(DECIMALS_USDC)
+      const to = BigInt(aDec)
+      if (to === from) return amt
+      return to > from ? amt * 10n ** (to - from) : amt / 10n ** (from - to)
+    })()
+    await runTx('Borrow', async () => (lendMarket as any).borrow(amt6, account))
+  }, [lendMarket, account, amtUSDC, aDec, runTx])
 
+  // repay to market (USDC)
   const onRepay = React.useCallback(async () => {
-    if (!evault || !account) return toast.error('EVault not ready.')
-    const amt = toBase(amtSenior); if (!amt) return toast.error('Enter a valid amount.')
-    await runTx('Repay', async () => (evault as any).repay(amt, account))
-  }, [evault, account, amtSenior, toBase, runTx])
+    if (!lendMarket || !account) return toast.error('LendMarket not ready.')
+    const amt = toBase(amtUSDC, DECIMALS_USDC); if (!amt) return toast.error('Enter a valid USDC amount.')
+    const amt6 = (() => {
+      const from = BigInt(DECIMALS_USDC)
+      const to = BigInt(aDec)
+      if (to === from) return amt
+      return to > from ? amt * 10n ** (to - from) : amt / 10n ** (from - to)
+    })()
+    await runTx('Repay', async () => (lendMarket as any).repay(amt6, account))
+  }, [lendMarket, account, amtUSDC, aDec, runTx])
 
+  // withdraw USDC from sUSDC
   const onWithdrawUSDC = React.useCallback(async () => {
-    if (!evault || !account) return toast.error('EVault not ready.')
-    const amt = toBase(amtSenior); if (!amt) return toast.error('Enter a valid amount.')
-    // withdraw(assets, receiver, owner)
-    await runTx('Withdraw', async () => (evault as any).withdraw(amt, account, account))
-  }, [evault, account, amtSenior, toBase, runTx])
+    if (!sUSDC || !account) return toast.error('sUSDC not ready.')
+    const amt = toBase(amtUSDC, DECIMALS_USDC); if (!amt) return toast.error('Enter a valid USDC amount.')
+    // sUSDC.withdraw(assets, receiver, owner)
+    await runTx('Withdraw sUSDC → USDC', async () => (sUSDC as any).withdraw(amt, account, account))
+  }, [sUSDC, account, amtUSDC, toBase, runTx])
 
-  // ========= Junior (jUSDC) — direct calls =========
+  // ========= Junior (sUSDC / jUSDC) =========
+
+  // approve sUSDC -> jUSDC (spender = jUSDC address)
   const onApproveSUSDCForJunior = React.useCallback(async () => {
-    if (!evault || !evaultJuniorAddress) return toast.error('sUSDC or Junior not ready.')
-    const amt = toBase(amtJunior); if (!amt) return toast.error('Enter a valid amount.')
-    // approve on sUSDC token (the EVault token) to the junior wrapper
-    await runTx('Approve sUSDC→Junior', async () => (evault as any).approve(evaultJuniorAddress, amt))
-  }, [evault, evaultJuniorAddress, amtJunior, toBase, runTx])
+    if (!sUSDC || !jUSDCAddress) return toast.error('sUSDC or jUSDC not ready.')
+    const amt = toBase(amtSShare, DECIMALS_4616); if (!amt) return toast.error('Enter a valid sUSDC share amount.')
+    await runTx('Approve sUSDC→jUSDC', async () => (sUSDC as any).approve(jUSDCAddress, amt))
+  }, [sUSDC, jUSDCAddress, amtSShare, toBase, runTx])
 
+  // deposit sUSDC -> jUSDC (assets = sUSDC shares)
   const onDepositSUSDCtoJunior = React.useCallback(async () => {
-    if (!evaultJunior || !account) return toast.error('Junior wrapper not ready.')
-    const amt = toBase(amtJunior); if (!amt) return toast.error('Enter a valid amount.')
-    // direct call: deposit(assets, receiver)
-    await runTx('Deposit sUSDC→jUSDC', async () => (evaultJunior as any).deposit(amt, account))
-  }, [evaultJunior, account, amtJunior, toBase, runTx])
+    if (!jUSDC || !account) return toast.error('jUSDC not ready.')
+    const amt = toBase(amtSShare, DECIMALS_4616); if (!amt) return toast.error('Enter a valid sUSDC share amount.')
+    await runTx('Deposit sUSDC → jUSDC', async () => (jUSDC as any).deposit(amt, account))
+  }, [jUSDC, account, amtSShare, toBase, runTx])
 
-  const onDemoteJuniortoSUSDC = React.useCallback(async () => {
-    if (!evault || !account) return toast.error('EVault not ready.')
-    const amtS = toBase(amtJunior); if (!amtS) return toast.error('Enter a valid amount.')
-    await runTx('demoteToSenior (j→s)', async () => {
-      // Convert desired sUSDC (shares, UI units) into j-shares required, then call demoteToSenior(jShares, receiver)
-      const assetsUSDC: bigint = await (evault as any).convertToAssets(amtS)
-      const jNeeded: bigint = await (evault as any).previewWithdrawJunior(assetsUSDC)
-      return (evault as any).demoteToSenior(jNeeded, account)
+  // redeem jUSDC -> sUSDC
+  const onRedeemJuniorToSUSDC = React.useCallback(async () => {
+    if (!jUSDC || !account) return toast.error('jUSDC not ready.')
+    const sDesired = toBase(amtSShare, DECIMALS_4616); if (!sDesired) return toast.error('Enter a valid sUSDC share amount.')
+    // Compute j-shares required for the target s-shares (assets) and redeem
+    await runTx('Redeem jUSDC → sUSDC', async () => {
+      const jNeeded: bigint = await (jUSDC as any).convertToShares(sDesired)
+      return (jUSDC as any).redeem(jNeeded, account, account)
     })
-  }, [evault, account, amtJunior, toBase, runTx])
+  }, [jUSDC, account, amtSShare, toBase, runTx])
 
   const writeDisabled = busy || !networkOk || !account
 
@@ -219,7 +245,7 @@ export default function Test() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">/test — Direct contract calls</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Connect wallet, switch to <strong>Paseo</strong>, and exercise direct methods.
+          Connect your wallet, switch to <strong>Paseo</strong>, and exercise direct methods.
         </p>
       </div>
 
@@ -248,8 +274,9 @@ export default function Test() {
         <Card>
           <CardHeader><CardTitle>Contracts</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="EVault" value={evaultAddress} />
-            <Row label="EVault Junior (wrapper)" value={evaultJuniorAddress} />
+            <Row label="sUSDC (ERC4626)" value={sUSDCAddress} />
+            <Row label="jUSDC (ERC4626)" value={jUSDCAddress} />
+            <Row label="LendMarket" value={lendMarketAddress} />
             <Row label="USDC" value={usdcAddress} />
           </CardContent>
         </Card>
@@ -261,9 +288,9 @@ export default function Test() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
             <Input
-              value={amtSenior}
-              onChange={(e) => setAmtSenior(e.target.value)}
-              placeholder={`Amount (UI decimals = ${DECIMALS})`}
+              value={amtUSDC}
+              onChange={(e) => setAmtUSDC(e.target.value)}
+              placeholder={`USDC amount (UI decimals = ${DECIMALS_USDC})`}
               className="max-w-xs"
             />
             <div className="flex flex-wrap gap-2">
@@ -283,15 +310,15 @@ export default function Test() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
             <Input
-              value={amtJunior}
-              onChange={(e) => setAmtJunior(e.target.value)}
-              placeholder={`Amount (UI decimals = ${DECIMALS})`}
+              value={amtSShare}
+              onChange={(e) => setAmtSShare(e.target.value)}
+              placeholder={`sUSDC shares (UI decimals = ${DECIMALS_4616})`}
               className="max-w-xs"
             />
             <div className="flex flex-wrap gap-2">
-              <Button onClick={onApproveSUSDCForJunior} disabled={writeDisabled}>approve (sUSDC→Junior)</Button>
+              <Button onClick={onApproveSUSDCForJunior} disabled={writeDisabled}>approve (s→j)</Button>
               <Button onClick={onDepositSUSDCtoJunior} disabled={writeDisabled}>deposit (s→j)</Button>
-              <Button onClick={onDemoteJuniortoSUSDC} disabled={writeDisabled} variant="secondary">demoteToSenior (j→s)</Button>
+              <Button onClick={onRedeemJuniorToSUSDC} disabled={writeDisabled} variant="secondary">redeem (j→s)</Button>
             </div>
           </div>
 
