@@ -40,7 +40,7 @@ export function SrApyKPI({
         <span className="text-xs text-muted-foreground">{label}</span>
         <InfoTip contentClassName="font-display text-[11px] leading-snug" label={tooltipContent ?? defaultTooltip} />
       </div>
-      <div className={`text-sm font-bold leading-none ${valueClassName}`}>10%</div>
+      <div className={`text-sm font-bold leading-none ${valueClassName}`}>{seniorApyDisplay}</div>
     </div>
   )
 }
