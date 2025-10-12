@@ -1,6 +1,0 @@
-evc/=lib/ethereum-vault-connector/src/
-evk/=lib/euler-vault-kit/src/
-erf/=lib/EulerRouterFactory
-forge-std/=lib/forge-std/src/
-ethereum-vault-connector/=lib/ethereum-vault-connector/src/
-lendoor/=src/
