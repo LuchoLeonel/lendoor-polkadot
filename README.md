@@ -112,6 +112,15 @@ Lenders provide liquidity in two tranches:
 - **Senior (sUSDC)** — lower risk, priority in repayments, protected by junior buffer.  
 - **Junior (jUSDC)** — higher yield, higher risk, absorbs first losses (can be negative in stress).
 
+
+---
+
+## System Flow Diagram
+
+<p align="center">
+  <img src="frontend/public/flow.png" alt="Lendoor — high‑level flow" style="max-width: 100%; border-radius: 12px;" />
+</p>
+
 ---
 
 ## Repository
