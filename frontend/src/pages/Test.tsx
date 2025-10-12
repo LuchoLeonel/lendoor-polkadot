@@ -351,7 +351,7 @@ export default function Test() {
       <Card>
         <CardHeader><CardTitle>Read State</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Block title="Credit line (borrowed / limit)" val={`${borrowedDisplay} / ${creditLimitDisplay}`} />
+          <Block title="Credit line (borrowed / limit)" val={`${creditLimitDisplay}`} />
           <Block title="sUSDC balance / Senior available" val={`${susdcDisplay} / ${seniorWithdrawAvailableDisplay}`} />
           <Block title="jUSDC balance / Junior available" val={`${jusdcDisplay} / ${juniorWithdrawAvailableDisplay}`} />
           <Button size="sm" className="mt-2 w-fit" variant="outline" onClick={() => void refreshContracts()}>

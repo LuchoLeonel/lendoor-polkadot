@@ -7,9 +7,17 @@ import { DECIMALS_USDC } from '@/lib/utils' // UI precision (e.g., 4)
 
 type Options = { pollMs?: number }
 
+/** Safely rescale bigint between decimal systems (floors on downscale). */
+function scaleDecimals(value: bigint, fromDec: number, toDec: number): bigint {
+  const f = BigInt(fromDec)
+  const t = BigInt(toDec)
+  if (t === f) return value
+  return t > f ? value * 10n ** (t - f) : value / 10n ** (f - t)
+}
+
 /**
  * Senior (sUSDC) withdrawable amount for the connected user.
- * Primary source: sUSDC.maxWithdraw(user) → underlying USDC (on-chain decimals).
+ * Primary source: sUSDC.maxWithdraw(user) → underlying USDC (on-chain decimals, usually 6).
  * If that returns 0, we diagnose using:
  *  - sUSDC.balanceOf(user) → shares
  *  - sUSDC.convertToAssets(shares) → theoretical assets
@@ -18,23 +26,22 @@ type Options = { pollMs?: number }
  */
 export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) {
   const { sUSDC, lendMarket, connectedAddress, usdcDecimals } = useContracts()
-  const dec = usdcDecimals ?? 6
+  const dec = usdcDecimals ?? 6 // on-chain USDC decimals
 
-  const [rawUSDC, setRawUSDC] = React.useState<bigint | null>(null) // USDC in on-chain decimals (typically 6)
-  const [uiAmount, setUiAmount] = React.useState<number | null>(null) // scaled for UI (DECIMALS_USDC)
+  const [rawUSDC, setRawUSDC] = React.useState<bigint | null>(null) // USDC on-chain (dec)
+  const [uiAmount, setUiAmount] = React.useState<number | null>(null) // USDC UI (DECIMALS_USDC)
   const [diagnosis, setDiagnosis] = React.useState<
     'ok' | 'no-liquidity' | 'no-balance' | 'controller-or-disabled' | 'unknown'
   >('unknown')
   const [loading, setLoading] = React.useState(false)
 
-  // Scale raw on-chain assets → UI units using DECIMALS_USDC
+  // On-chain -> UI (single rescale using bigint; then to number for display)
   const toUi = React.useCallback(
     (raw: bigint): number | null => {
       try {
-        const human = Number(formatUnits(raw, dec)) // e.g., 0.7022
-        if (!Number.isFinite(human)) return null
-        const scale = Math.pow(10, dec - DECIMALS_USDC) // e.g., 10^(6-4)=100
-        return human * scale // e.g., 70.22
+        const uiBase = scaleDecimals(raw, dec, DECIMALS_USDC)
+        const asNum = Number(formatUnits(uiBase, DECIMALS_USDC))
+        return Number.isFinite(asNum) ? asNum : null
       } catch {
         return null
       }
@@ -46,7 +53,7 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
     if (!sUSDC || !connectedAddress) return
     setLoading(true)
     try {
-      // 1) Hard limit: max withdrawable in underlying assets
+      // 1) Hard limit in underlying assets
       const max: bigint = await (sUSDC as any).maxWithdraw(connectedAddress)
       if (max > 0n) {
         setRawUSDC(max)
@@ -66,7 +73,7 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
 
       const assetsFromShares: bigint = await (sUSDC as any).convertToAssets(shares)
 
-      // Pool liquidity from LendMarket if available
+      // Pool liquidity from LendMarket (also in asset units)
       let cash: bigint | null = null
       try {
         if (lendMarket) {

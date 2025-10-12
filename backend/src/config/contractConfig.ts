@@ -9,7 +9,7 @@ if (!RPC_URL) {
 }
 
 // Set contract address based on environment
-const CONTRACT_ADDRESS = process.env.POLKADOT_EVAULT;
+const CONTRACT_ADDRESS = process.env.POLKADOT_CREDIT_MANAGER_ADDRESS;
 if (!CONTRACT_ADDRESS) {
   throw new Error("Missing contract addresses in environment variables");
 }
