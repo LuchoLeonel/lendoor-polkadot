@@ -79,14 +79,11 @@ export function Header() {
         <div className="relative min-w-[200px] w-[200px] shrink-0 flex items-center justify-end gap-3">
           {authKnown ? (
             <>
-              {/* Show a faucet only when an EVM wallet is connected */}
-              {connectedAddress ? <MintUSDCButton /> : null}
-
-              {/* Login hint badge (only when not logged-in) */}
-              {showLoginBadge && <UserJourneyBadge />}
-
-              {/* Dynamic’s connect/account widget */}
-              <DynamicWidget />
+              <div className="relative shrink-0 flex items-center justify-end gap-3">
+                {connectedAddress ? <MintUSDCButton /> : null}
+                {showLoginBadge && <UserJourneyBadge />}
+                <DynamicWidget />
+              </div>
             </>
           ) : (
             <div className="h-10 w-full rounded-md border border-primary/20 bg-muted/40 animate-pulse" />
