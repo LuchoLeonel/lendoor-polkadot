@@ -4,7 +4,7 @@ import * as React from 'react'
 import { parseUnits } from 'ethers'
 import { toast } from 'sonner'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS_USDC } from '@/lib/utils'
+import { DECIMALS_USDC, UI_USDC_DP } from '@/lib/utils'
 import { useSeniorAvailableToWithdraw } from './useSeniorAvailableToWithdraw'
 import { useUserJourney } from '@/providers/UserJourneyProvider'
 
@@ -45,8 +45,8 @@ export function useWithdrawUSDC() {
       // Comparación en unidades UI (DECIMALS_USDC)
       if (want > availableUi) {
         toast.error('Amount exceeds available', {
-          description: `Requested ${want.toFixed(DECIMALS_USDC)} USDC, available ${availableUi.toFixed(
-            DECIMALS_USDC,
+          description: `Requested ${want.toFixed(UI_USDC_DP)} USDC, available ${availableUi.toFixed(
+            UI_USDC_DP,
           )} USDC.`,
         })
         return

@@ -7,9 +7,10 @@ import { formatUnits } from 'ethers'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-export const DECIMALS_USDC = 4;
-export const DECIMALS_4616 = 14;
-
+export const DECIMALS_USDC = 6;
+export const DECIMALS_4616 = 18;
+export const UI_USDC_DP = 2; 
+export const UI_SHARES_DP = 6;
 
 /** Rescale bigint between decimal systems (floors on downscale). */
 export function scaleDecimals(value: bigint, fromDec: number, toDec: number): bigint {

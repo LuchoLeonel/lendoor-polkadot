@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Contract, formatUnits } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS_4616 } from '@/lib/utils' // UI scale for ERC-4626 shares
+import { DECIMALS_4616, UI_SHARES_DP } from '@/lib/utils' // UI scale for ERC-4626 shares
 
 const ERC20_DEC_ABI = ['function decimals() view returns (uint8)'] as const
 
@@ -95,7 +95,7 @@ export function useJuniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
       ? '—'
       : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 0,
-          maximumFractionDigits: DECIMALS_4616,
+          maximumFractionDigits: UI_SHARES_DP,
         }).format(uiAmount)} sUSDC`
 
   return { rawSShares, sDecimals: sDec, uiAmount, display, loading, refresh: read }

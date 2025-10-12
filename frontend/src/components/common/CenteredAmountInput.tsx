@@ -14,7 +14,7 @@ type Props = {
 export function CenteredAmountInput({
   value,
   onChange,
-  symbol = '¢',
+  symbol = '$',
   className,
   showBadge,
 }: Props) {

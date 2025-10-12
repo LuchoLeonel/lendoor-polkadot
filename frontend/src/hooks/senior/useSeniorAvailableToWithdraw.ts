@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { formatUnits } from 'ethers'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS_USDC } from '@/lib/utils' // UI precision (e.g., 4)
+import { DECIMALS_USDC, UI_USDC_DP } from '@/lib/utils' // UI precision (e.g., 4)
 
 type Options = { pollMs?: number }
 
@@ -112,7 +112,7 @@ export function useSeniorAvailableToWithdraw({ pollMs = 30_000 }: Options = {}) 
       ? '—'
       : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 0,
-          maximumFractionDigits: DECIMALS_USDC,
+          maximumFractionDigits: UI_USDC_DP,
         }).format(uiAmount)} USDC`
 
   return { rawUSDC, uiAmount, decimals: dec, display, loading, refresh: read, diagnosis }

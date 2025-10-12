@@ -4,7 +4,7 @@ import * as React from 'react'
 import { parseUnits } from 'ethers'
 import { toast } from 'sonner'
 import { useContracts } from '@/providers/ContractsProvider'
-import { DECIMALS_4616 } from '@/lib/utils'
+import { DECIMALS_4616, UI_SHARES_DP } from '@/lib/utils'
 import { useJuniorAvailableToWithdraw } from './useJuniorAvailableToWithdraw'
 
 const errMsg = (e: any) => e?.shortMessage || e?.reason || e?.message || 'Transaction failed'
@@ -26,12 +26,11 @@ export function useDemoteJunior() {
   const { jUSDC, connectedAddress, refresh } = useContracts()
   const { rawSShares, refresh: refreshAvailable } = useJuniorAvailableToWithdraw({ pollMs: 0 }) // rawSShares: s-shares (18)
 
-  // Disponible en UI units (DECIMALS_4616)
-  const availableUi = React.useMemo(() => {
-    if (rawSShares == null) return 0
-    const sUi = scaleDecimals(rawSShares, 18, DECIMALS_4616) // bigint con DECIMALS_4616
-    return Number(sUi) / 10 ** DECIMALS_4616
+  const availableUiBase = React.useMemo(() => {
+    if (rawSShares == null) return 0n
+    return scaleDecimals(rawSShares, 18, DECIMALS_4616)
   }, [rawSShares])
+  const availableUi = Number(availableUiBase) / 10 ** DECIMALS_4616
 
   const [submitting, setSubmitting] = React.useState(false)
 
@@ -49,11 +48,12 @@ export function useDemoteJunior() {
         toast.error('Invalid amount')
         return
       }
-
-      if (want > availableUi) {
+      
+      const wantUiBase = parseUnits(amt, DECIMALS_4616)
+      if (wantUiBase > availableUiBase) {
         toast.error('Amount exceeds available', {
-          description: `Requested ${want.toFixed(DECIMALS_4616)} sUSDC, available ${availableUi.toFixed(
-            DECIMALS_4616,
+          description: `Requested ${want.toFixed(UI_SHARES_DP)} sUSDC, available ${availableUi.toFixed(
+            UI_SHARES_DP,
           )} sUSDC.`,
         })
         return

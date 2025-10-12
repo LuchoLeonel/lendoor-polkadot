@@ -5,7 +5,7 @@ import { parseUnits } from 'ethers'
 import { toast } from 'sonner'
 import { useContracts } from '@/providers/ContractsProvider'
 import { useUserJourney } from '@/providers/UserJourneyProvider'
-import { DECIMALS_4616 } from '@/lib/utils'
+import { DECIMALS_4616, UI_SHARES_DP } from '@/lib/utils'
 
 const err = (e: any) => e?.shortMessage || e?.reason || e?.message || 'Transaction failed'
 
@@ -20,11 +20,10 @@ function scaleDecimals(value: bigint, fromDec: number, toDec: number): bigint {
 
 // Format sUSDC shares using UI scale (DECIMALS_4616 ⇒ 4 visible decimals)
 function formatSharesUi(amount18: bigint): string {
-  const uiBase = scaleDecimals(amount18, 18, DECIMALS_4616) // bigint in UI base
-  const base = 10n ** BigInt(DECIMALS_4616)
+  const uiBase = scaleDecimals(amount18, 18, UI_SHARES_DP)
+  const base = 10n ** BigInt(UI_SHARES_DP)
   const units = uiBase / base
-  const frac = (uiBase % base).toString().padStart(DECIMALS_4616, '0')
-  // trim trailing zeros
+  const frac = (uiBase % base).toString().padStart(UI_SHARES_DP, '0')
   const trimmed = frac.replace(/0+$/, '')
   return trimmed.length ? `${units.toString()}.${trimmed}` : units.toString()
 }
